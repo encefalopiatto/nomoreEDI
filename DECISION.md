@@ -126,6 +126,20 @@ That last part matters most: because the rulebook contains examples with known r
 
 And only after all that is proven: a new message format where every message simply says "I follow rulebook #12345, version 3," and a small piece of software at each company reads the rulebook and handles the rest. That is the endgame — but it only makes sense once the rulebooks exist and have earned trust.
 
+### What the software would look like
+
+Five parts. Two are screens for the outside world, two are screens for Procuros people, one is invisible machinery.
+
+1. **The rulebook library.** A catalog, like a well-organized document archive. Every entry is one rulebook: "Edeka — Invoice — version 3, valid from 1 October." Open it and you see readable pages: the field list, the if-then rules in plain sentences, the examples. A "History" tab shows what changed between versions, like tracked changes in a Word document. Every other part reads from this library.
+2. **The checker.** No screen of its own — machinery built into the message pipeline we already run. Every message gets held against its rulebook for a split second. What you see of it: a green tick or a red flag on each message in monitoring, and the red flag says in words what is wrong — "line 12: best-before date missing (rule 47)" — not just "rejected."
+3. **The workbench** — for our integration engineers. Draft rulebooks appear here: the software reads our existing customer setups and the retailer's PDF, drafts a rulebook from both, and shows the disagreements — "the live setup does X, the PDF says Y — which is correct?" The engineer clicks through them. Below that, a test report: "applied to six months of real messages, this draft would have wrongly rejected 3 of 10,000 — here they are." The engineer's job shifts from writing translations by hand to refereeing a machine that drafts them.
+4. **The test portal** — for suppliers. A plain website: drag a sample file in, get a report seconds later — green and red lines, each red one a plain sentence pointing at the exact spot in the file. Fix, retry, any time of day. All green → an "Approved" badge naming the rulebook version and date, and the connection can go live. No human at the retailer looks at test files again; this replaces the weeks of email ping-pong.
+5. **The change board** — for account and support teams. One dashboard: "Rewe invoice version 4 takes effect 1 November. 61 of 74 connected suppliers already pass it; these 13 don't — here is what each is missing." Notifications go out automatically at publication; during the transition window both versions are accepted.
+
+A normal day with it: a new supplier joins a known retailer — draft translation generated and tested against the rulebook's examples, engineer settles the few open questions in an afternoon, supplier self-tests to green, approved, live in days, no waiting on the retailer. A bad invoice is caught *before* it leaves — "price on line 3 doesn't match the agreed price list" — so the retailer never sees it: no rejection, no dispute, no fine. A retailer changes a requirement — version 4 appears in the library with changes highlighted, everyone is notified the same minute, and the change board shows who is ready weeks before the deadline instead of us learning it from production failures.
+
+Physically: one web application (library, workbench, portal, change board are sections of it) plus the invisible checker plugged into the existing message pipeline. Messages keep flowing exactly as today — what is new is that the *rules* about them live in one place where software can read them, test against them, and shout early.
+
 ### How we would actually build it
 
 **Step 1 — write one rulebook by hand.** Pick one real, painful flow (say, fresh-food delivery notes with batch numbers). Write its rulebook manually. If a person can't write it comfortably, the format is wrong — better to find out in week one.
