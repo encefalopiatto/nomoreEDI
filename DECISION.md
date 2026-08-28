@@ -2,6 +2,8 @@
 
 *Build recommendation derived from [ASSESSMENT.md](ASSESSMENT.md) and the [research corpus](research/). Four products in strict order, with the exchange language itself deliberately last. August 2026.*
 
+*Parts I and II are written for engineers. [Part III](#part-iii--in-plain-language) says the same thing in plain language, for anyone.*
+
 ---
 
 ## Part I — What to build, and why
@@ -89,3 +91,57 @@ No new wire format, no runtime SDK, no public registry, no signing federation, n
 ### Sizing, honestly
 
 2–3 engineers plus one senior integration engineer as the domain oracle gets through the miner + shadow validator + compiler experiment in a quarter. The single biggest technical risk is not any component — it is contract quality on messy flows, which is why the back-testing loop and shadow mode are not nice-to-haves; they are the safety net that makes everything else honest.
+
+---
+
+## Part III — In plain language
+
+*The same plan as Parts I and II, written so that anyone — not just developers — can understand it.*
+
+### The problem, in one paragraph
+
+Today, when a supplier connects to a retailer, the retailer's requirements live in a PDF document, in emails, and in the heads of integration engineers. A person reads the PDF, builds the translation between the two systems by hand, and then both sides send test files back and forth for weeks until someone at the retailer says "looks good." After go-live, the retailer can quietly change their rules, and things break in production. Our own data says the slow, expensive parts are the **testing** and the **clarifying of unclear requirements** — not the translation work itself.
+
+### The idea: replace the PDF with a rulebook a computer can read
+
+For each retailer and each document type (order, invoice, delivery note), there is one **rulebook file**. It contains, written in a strict format a computer can act on:
+
+- **Which fields exist and which are mandatory.** "An invoice line must have a product number and a price."
+- **The if-then rules.** "If the product has a batch number, it must also have a best-before date." "If it's a credit note, it must reference the original invoice."
+- **How to answer.** "When you receive an order, your order response must copy the order number and the line numbers exactly, and arrive within 48 hours."
+- **Delivery details.** Which address and channel messages should be sent through.
+- **An answer key: example messages.** Some correct, some wrong on purpose — each wrong one labeled with the exact error it should trigger.
+
+That last part matters most: because the rulebook contains examples with known right answers, **anything built from the rulebook can be tested automatically.** That is what the PDF could never do.
+
+### The four things this makes possible
+
+**1. The checker.** Every message is compared against the rulebook automatically. Instead of "file rejected, good luck," the sender gets: "line 12 breaks rule 47 — best-before date is missing." Precise, instant, no phone call needed.
+
+**2. The builders.** From one rulebook, software produces: the first draft of the translation between systems, the human-readable documentation (the PDF becomes something we *print out of* the rulebook, never something we read *into* it), and the old-style EDI version for partners who stay on the old system. The answer key checks each of these before anyone relies on them.
+
+**3. The self-service test.** A supplier uploads sample files to a website. They get a pass/fail report with exact reasons, fix their files, and retry — as many times as needed, any hour of the day. When everything passes, they get an official "approved" stamp and go live. Nobody at the retailer reviews test files anymore, and nobody waits weeks for a sign-off email. This attacks the single biggest source of waiting.
+
+**4. The changelog.** When requirements change, a version 2 of the rulebook is published. Everyone connected is notified automatically, there is a transition period where both versions are accepted, and a dashboard shows who has switched and who hasn't. Silent changes — today's second-biggest cause of production failures — stop being possible.
+
+And only after all that is proven: a new message format where every message simply says "I follow rulebook #12345, version 3," and a small piece of software at each company reads the rulebook and handles the rest. That is the endgame — but it only makes sense once the rulebooks exist and have earned trust.
+
+### How we would actually build it
+
+**Step 1 — write one rulebook by hand.** Pick one real, painful flow (say, fresh-food delivery notes with batch numbers). Write its rulebook manually. If a person can't write it comfortably, the format is wrong — better to find out in week one.
+
+**Step 2 — draft rulebooks automatically from what we already have.** Our existing translations already contain the rules, just hidden inside code ("if field X exists, do Y"). A program can read them and pull those rules out. At the same time, AI reads the retailer's PDF and extracts rules from there. Then we compare: where both sources agree, trust the rule; where they disagree, ask an experienced colleague. That comparison also shows us, for the first time, how much knowledge lives only in people's heads.
+
+**Step 3 — test rulebooks against the past.** Run months of old, real messages through the drafted rulebook. If it rejects messages that were actually fine, it is too strict. If it accepts messages that later caused support tickets, it is too loose. Fix and repeat until it is right.
+
+**Step 4 — watch-only mode.** Turn the checker on for live traffic, but let it only *flag*, never block. For a few months we compare its flags with what actually went wrong. Only when it has proven trustworthy does it get the power to reject anything.
+
+**Step 5 — the experiment that decides everything.** For a few flows, let AI build the translation twice: once from just the PDF, once from the rulebook with its answer key. Count the mistakes — especially the *silent* ones, where a message goes through but carries wrong data, because those become wrong payments. If the rulebook version makes clearly fewer silent mistakes, this is a real product with a real edge. If not, we learned it cheaply.
+
+**Step 6 — the self-service test site, then the changelog.** Each builds on the pieces before it.
+
+### Why this order
+
+Each piece is useful on its own even if we never go further. The rulebooks alone preserve knowledge that today walks out the door when people leave. The checker alone catches errors earlier. The self-service test alone removes the waiting. The changelog alone kills silent breakage. The new message format is the only piece that is worthless unless everything before it worked — so it goes last. And thirty years of history says exactly this: new formats never win on their own, but tools that remove waiting and ambiguity do.
+
+**Team:** two or three developers, plus one experienced integration person as the referee for unclear rules. About three months to get through steps 1–5 and have the decisive numbers.
