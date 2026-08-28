@@ -5,6 +5,7 @@ Working notes toward a self-describing B2B exchange language intended to replace
 ## Contents
 
 - **[ASSESSMENT.md](ASSESSMENT.md)** — the design assessment: verdict, thirty years of adversarially fact-checked prior art, why the strong form fails, internal ground truth, the surviving architecture ("Trade Contracts" / self-describing by reference), adoption strategy, Phase 0, and the measurement agenda.
+- **[DECISION.md](DECISION.md)** — the build recommendation: four products in strict order (contract file → compiler → conformance checkmark → change ledger, language last) and the concrete engineering plan for each.
 - **[research/](research/)** — the full research corpus behind the assessment, one file per lens with the research agent's structured findings and the independent fact-checker's verdicts:
   - [lens-prior-art.md](research/lens-prior-art.md) — XML, ebXML CPP/CPA, X12 SEF, Stedi Guides, RosettaNet, Semantic Web, ISO 20022, UBL/EN 16931, OpenAPI, Avro
   - [lens-peppol-regulation.md](research/lens-peppol-regulation.md) — how PEPPOL killed bilateral testing; EU e-invoicing mandate dates (DE/FR/BE/IT, ViDA)
