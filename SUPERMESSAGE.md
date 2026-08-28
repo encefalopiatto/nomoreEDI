@@ -1,6 +1,6 @@
-# The Supermessage — specification v0, in plain language
+# The Supermessage — specification v0.1, in plain language
 
-*One file that contains a business message **and** everything needed to understand it, check it, answer it, and stay connected to its sender. Draft v0, August 2026. A complete worked example lives in [spec/example-order.supermessage.json](spec/example-order.supermessage.json).*
+*One file that contains a business message **and** everything needed to understand it, check it, answer it, and stay connected to its sender. Draft v0.1, August 2026. A complete worked example lives in [spec/example-order.supermessage.json](spec/example-order.supermessage.json).*
 
 ---
 
@@ -48,7 +48,7 @@ Example messages: at least one fully correct example, and deliberately wrong exa
 
 These are not optional; they are what keeps the supermessage from dying the way its ancestors died.
 
-1. **Everything is signed.** The file as a whole is signed by the sender; the rulebook section is signed by its publisher. The reader trusts signatures, not the messenger. A tampered file or a counterfeit rulebook is detected before anything else happens.
+1. **Everything is signed, with key pairs.** Every company has a key pair: a private key it keeps secret and signs with, and a public key anyone can use to verify. The file as a whole is signed by the sender; the rulebook section is signed by its publisher. The reader trusts signatures, not the messenger — a tampered file or a counterfeit rulebook is detected before anything else happens. A directory (a "phone book" of public keys — operated by Procuros at first, handable to an industry body later) vouches that a public key really belongs to the company it claims.
 2. **A message can propose, never apply.** New rulebook version, new delivery address, new bank account — a supermessage can carry the proposal, with its signature and effective date. The receiving software applies it only after verifying the signature, and for anything sensitive (money, connectivity), only after a human confirms. This closes the fraud door that "live configuration in the message" would otherwise open.
 3. **Rules check, they never act.** The if-then rules are written in a deliberately limited language that can test values ("is the best-before date present? is the sum of lines equal to the total?") but cannot run programs, reach the network, or touch files. A malicious supermessage cannot harm whoever opens it.
 
@@ -74,9 +74,9 @@ The reader is deliberately minimal. All the intelligence lives in the file; the 
 
 This specification does not replace the order of work in [DECISION.md](DECISION.md) — it completes it. The rulebook library, the checker, the workbench, the test portal, and the change board are how rulebooks get created, proven, and governed. The supermessage is the **traveling form** of the same rulebook: the packaging that lets it leave our walls as a portable, signed thing that anyone's software can open. Concretely: section 3 of a supermessage *is* a rulebook from the library; the checker and the reader validate with the *same* rules; the answer key in section 6 is the same one the test portal uses. One artifact, two homes — the library at rest, the supermessage in motion.
 
-## What v0 leaves open, honestly
+## Decisions settled after the first draft
 
-- **Who signs, technically** — the signature scheme and who holds keys (per company? via Procuros? via an industry body?) is designed but not decided.
-- **Legal invoices** — in the EU, invoices must legally use the mandated formats. A supermessage carrying an invoice must therefore embed or project into the legal format; this is planned but not specified in v0.
-- **The exact rule language** — v0 writes rules as structured plain conditions; the production choice of checking language is specified in DECISION.md Part II.
-- **Naming** — "supermessage" is the working name.
+- **Signing: public–private key pairs.** Each company signs with its own private key; anyone verifies with the matching public key (using a modern, widely used signature algorithm — Ed25519). A public-key directory vouches for who owns which key: Procuros operates it first, and it can be handed to an industry body later. The one thing still open here is that long-term governance handoff, not the scheme.
+- **Legal invoices: embed the legal document.** A supermessage carrying an invoice embeds the complete legally mandated invoice (for example, the EN 16931 e-invoice that German, French, and Belgian law require) as a subsection of its content. Two rules make this safe: the embedded legal invoice is the authoritative one wherever the two could disagree, and the rulebook must contain a check that the supermessage's own fields agree with it. Archiving stores the embedded legal invoice. One caveat stays: where the law prescribes a *transmission channel* (France's certified platforms, Italy's exchange system), embedding solves the format but the channel must still be the legal one — that is handled by the operator carrying the message, not by the file.
+- **The rule language: CEL.** Rules are written twice in every rulebook, on purpose: once as a plain-language sentence (for people), and once in CEL — a small, widely used checking language, proven safe in very large systems, which can only test values and can never act, reach the network, or touch files (which is exactly safety rule 3). The plain sentence explains; the CEL expression is what actually runs; a rule missing either half is invalid. The worked example shows both halves side by side.
+- **The name: supermessage.** Confirmed.

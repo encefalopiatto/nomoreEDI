@@ -22,8 +22,9 @@
     },
     "signature": {
       "signed_by": "Nordkauf Handels GmbH (fictional)",
-      "method": "placeholder-for-illustration",
-      "value": "SIG-EXAMPLE-ONLY"
+      "method": "ed25519-public-key-signature",
+      "public_key_directory_entry": "keys.procuros.example/nordkauf",
+      "value": "SIG-EXAMPLE-PLACEHOLDER-ONLY"
     }
   },
 
@@ -67,8 +68,9 @@
     "valid_from": "2026-07-01",
     "published_by": "Nordkauf Handels GmbH (fictional)",
     "publisher_signature": {
-      "method": "placeholder-for-illustration",
-      "value": "SIG-RULEBOOK-EXAMPLE-ONLY"
+      "method": "ed25519-public-key-signature",
+      "public_key_directory_entry": "keys.procuros.example/nordkauf",
+      "value": "SIG-RULEBOOK-EXAMPLE-PLACEHOLDER-ONLY"
     },
     "fields": [
       {
@@ -106,32 +108,32 @@
       {
         "rule": "R-01",
         "plain_language": "Every order line must carry a product GTIN.",
-        "check": { "each": "lines", "condition": "product_id is present" },
+        "machine_check": "content.lines.all(l, has(l.product_id))",
         "error_message": "Line {line_number}: product GTIN missing (rule R-01)."
       },
       {
         "rule": "R-02",
         "plain_language": "Ordered quantity must be greater than zero.",
-        "check": { "each": "lines", "condition": "ordered_quantity > 0" },
+        "machine_check": "content.lines.all(l, l.ordered_quantity > 0)",
         "error_message": "Line {line_number}: quantity must be greater than zero (rule R-02)."
       },
       {
         "rule": "R-03",
         "plain_language": "The order must reference the price list its prices come from.",
-        "check": { "condition": "price_list_reference is present" },
+        "machine_check": "has(content.price_list_reference)",
         "error_message": "Price list reference missing (rule R-03)."
       },
       {
         "rule": "R-04",
         "plain_language": "Variable-weight products are ordered in pieces but priced per kilogram, so their lines must carry agreed_price_per_kg instead of agreed_unit_price.",
-        "check": { "each": "lines", "condition": "if pricing_note = priced_by_weight then agreed_price_per_kg is present and agreed_unit_price is absent" },
+        "machine_check": "content.lines.all(l, !has(l.pricing_note) || l.pricing_note != 'priced_by_weight' || (has(l.agreed_price_per_kg) && !has(l.agreed_unit_price)))",
         "error_message": "Line {line_number}: variable-weight line must use price per kg (rule R-04)."
       },
       {
         "rule": "R-05",
         "plain_language": "Both dairy products in this assortment are batch-tracked: the later despatch advice must state batch number and best-before date for every line. (Stated here so the supplier knows before shipping.)",
         "applies_to": "despatch_advice",
-        "check": { "each": "lines", "condition": "batch_number is present and best_before_date is present" },
+        "machine_check": "content.lines.all(l, has(l.batch_number) && has(l.best_before_date))",
         "error_message": "Line {line_number}: batch number and best-before date required for batch-tracked goods (rule R-05)."
       }
     ],
