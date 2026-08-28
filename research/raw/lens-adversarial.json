@@ -1,0 +1,136 @@
+{
+ "key": "adversarial",
+ "research": {
+  "summary": "Adversarial verdict: the design solves the cheapest layer of the problem, leaves the expensive layers intact, and adds legal, security, and adoption liabilities. A \"map\" does three jobs — syntax translation, schema alignment, business-semantics reconciliation. Self-description eliminates only the first, helps the second, and cannot touch the third, which dominates onboarding: whether \"delivery date\" means depot arrival or dispatch; net price with or without allowances; which of four GLNs gets invoiced; line- vs document-level VAT rounding; ORDRSP echoing buyer line numbers; INVOIC validating only against pre-loaded PRICAT/GDSN master data; each/case/pallet ambiguity; batch/best-before and catch-weight for fresh food; RTI/Pfand deposits. These are commitments about counterparties' processes, not message facts; they require bilateral agreement however perfectly fields are labeled. One received message radically underdetermines the contract — it shows one path through optional/conditional structure — so auto-built maps fail silently on promotions, returns, credit notes, consignment; silent failure is mispayment, which is why EDI testing exists (it validates money-flows, not parsing) and why enterprises would re-impose certification, recreating onboarding. Counterparty-shipped executable requirements are a security anti-pattern (schema poisoning, ReDoS-style DoS, sender grading its own homework); receivers will re-validate with their own rules anyway, producing dueling rule sets and a meta-dispute layer. Receivers cannot skip normalization: matching, posting, and inventory run in the ERP's fixed internal model, so \"no normalization\" relocates O(N²) alignment into every receiver — the cost canonical hubs exist to collapse — and contradicts \"works with any ERP\". Legally, the invoice is a mandated, archived, integrity-protected document: Germany requires EN 16931 reception since Jan 2025; ViDA (adopted 11 Mar 2025) mandates EN 16931 e-invoices plus digital reporting for intra-EU B2B from July 2030 — a new language is either another mapping target or legally void, and shared-state mutation cannot satisfy issuance/clearance/archiving. Giants have negative incentive: EDI cost is externalized to suppliers, friction feeds chargeback revenue (Walmart OTIF: 3% of COGS), and working order flows are too risky to swap. ebXML/RosettaNet/UBL/GS1-XML failed; Peppol needed mandates. The AI-fed ideas fail independently: embeddings (non-deterministic, non-invertible, unauditable), blockchain (TradeLens died despite Maersk+IBM), SAP CDC agents (CISO/SOX/licensing/internal-schema fragility).",
+  "key_points": [
+   {
+    "claim": "A 'map' performs three separable functions: syntax translation (EDIFACT/X12/CSV parsing), schema alignment (field correspondence), and business-semantics reconciliation (what the counterparty's process means by a field, which rules govern). Self-describing messages fully solve the first, partially the second, and none of the third — which dominates real onboarding effort.",
+    "evidence": "Procuros' own operating experience: parsing EDIFACT is commodity tooling; onboarding time goes into clarifying retailer MIG semantics (qualifier usage, required references, master-data preconditions), not into reading syntax.",
+    "relevance": "The core premise — self-description eliminates mapping — attacks the wrong cost layer; the value proposition collapses to 'nicer schema discovery'.",
+    "confidence": "model-knowledge"
+   },
+   {
+    "claim": "Semantic variance no schema removes (set 1): 'delivery date' as depot arrival vs dispatch (retailers use DTM+2/17/64/63 differently); unit price net vs gross of ALC allowances/charges; which GLN — buyer HQ (NAD+BY), delivery store (NAD+DP), invoicee (NAD+IV), payer — drives billing (Edeka/Rewe regional cooperatives split these); VAT rounded line-level vs document-level, where cent differences cause rejection.",
+    "evidence": "Standard EANCOM D.96A/D.01B retail MIG divergences; German retail cooperatives route ordering, delivery, and invoicing through different legal entities/GLNs; VAT rounding mismatches are a classic INVOIC clearing failure.",
+    "relevance": "Eight-plus concrete cases where a perfectly self-labeled field still needs bilateral process agreement — the claimed 'no testing phase' benefit evaporates.",
+    "confidence": "model-knowledge"
+   },
+   {
+    "claim": "Semantic variance (set 2): ORDRSP must echo buyer line numbers and per-line response codes or auto-matching fails; INVOIC validates only against pre-loaded PRICAT/GDSN price catalogs (out-of-band state no message carries); each/case/layer/pallet UoM and price-basis ambiguity on the same GTIN; mandatory batch/best-before (DTM+361) and catch-weight for fresh food; returnable transport items and German Pfand deposits as invoice lines; invoices must reference DESADV/SSCC for three-way match.",
+    "evidence": "GS1 EANCOM retail profiles; fresh-food retailers (Rewe, Edeka) require lot/BBD in DESADV; variable-weight items are priced per kg but ordered per piece; RTI/pallet deposit handling differs per retailer.",
+    "relevance": "Master-data dependencies and cross-document reference chains mean correctness is a property of the relationship and its state, not of any single self-describing message.",
+    "confidence": "model-knowledge"
+   },
+   {
+    "claim": "One received message radically underdetermines the schema and rules: it exhibits a single path through optional segments and conditional structures — no promotions, returns, credit notes, consignment, multi-drop, variable-weight, or year-end edge cases. A map inferred from one instance fails silently later, and silent failure here means wrong payments at scale.",
+    "evidence": "EDI test phases exist to validate money-flows against edge cases, not to parse syntax; inductive inference from instances cannot recover conditionality ('if variable weight then QTY+192...') or optionality bounds. Enterprises would re-impose certification, recreating the onboarding the design claims to abolish.",
+    "relevance": "Destroys the central 'build mapping from a single received message' mechanism on information-theoretic and operational grounds.",
+    "confidence": "model-knowledge"
+   },
+   {
+    "claim": "Counterparty-shipped executable requirements invert trust: the sender grades its own homework; malicious or buggy schemas enable poisoning and DoS (ReDoS, recursive/billion-laughs-style grammars) inside payment-adjacent systems. Receivers will re-validate with their own rules regardless, yielding dueling rule sets — 'valid per your schema, invalid per mine' — a meta-dispute layer instead of fewer disputes.",
+    "evidence": "Security precedent: XML external-entity and billion-laughs attacks arose precisely from self-describing, sender-controlled document machinery; no bank or retailer executes counterparty-supplied validation logic against its own books.",
+    "relevance": "The in-band 'requirements' mechanism is a CISO non-starter and doesn't even achieve its goal, since receiver-side rules persist.",
+    "confidence": "model-knowledge"
+   },
+   {
+    "claim": "Receivers can never skip normalization: posting, three-way match, inventory, and pricing run in the ERP's fixed internal model (SAP item master, open-PO tables). 'No normalization/denormalization layer' just relocates O(N²) pairwise alignment into every receiver's adapter — exactly the cost canonical hub models (Procuros' own architecture) exist to collapse — and directly contradicts 'works with any ERP'.",
+    "evidence": "Any inbound document must be projected into the receiver's ERP schema to be actionable; self-description aids discovery of the sender's shape but the sender-shape-to-receiver-shape transformation remains and is the map.",
+    "relevance": "Internal contradiction in the design: peer-to-peer plus no-normalization is strictly more total mapping work than today's hub model.",
+    "confidence": "model-knowledge"
+   },
+   {
+    "claim": "Invoices are legally constrained documents, not mutable shared state: EU VAT law requires integrity, authenticity, and multi-year archiving of the invoice as issued. Germany mandates that all businesses can receive EN 16931 e-invoices since 1 Jan 2025 (issuance phased 2027–28); ViDA, adopted 11 Mar 2025, mandates EN 16931 structured e-invoices plus near-real-time digital reporting for intra-EU B2B from 1 July 2030.",
+    "evidence": "ViDA adopted by EU Council 11 March 2025, published OJ 25 March 2025; EN 16931-1:2026 updated for B2B/DRR; German phase-in confirmed (reception 2025, issuance €800k+ turnover 2027, all 2028). Clearance regimes (Italy SDI, France 2026-27) require discrete submitted documents.",
+    "relevance": "A new language either maps into EN 16931 (becoming one more mapping target) or produces legally void invoices; 'state mutation instead of documents' fails EU law outright.",
+    "confidence": "verified-web",
+    "source": "https://www.vatcalc.com/eu/eu-vat-in-the-digital-age-vida-adopted-by-ec/ ; https://taxation-customs.ec.europa.eu/taxation/vat/vat-digital-age-vida_en ; https://www.avalara.com/blog/en/europe/2024/03/germany-mandatory-e-invoicing-2025.html"
+   },
+   {
+    "claim": "Retail giants have weak-to-negative adoption incentive: EDI cost is externalized to suppliers (mapping, VAN fees, certification against the retailer's MIG); MIGs are sunk and working; and message friction feeds deduction revenue — Walmart's OTIF regime charges 3% of cost of goods on non-compliant shipments, automated via invoice deduction.",
+    "evidence": "Walmart OTIF: 98% threshold, 3% COGS chargeback, invoiced through HighRadius; roughly 30–50% of fines are disputable, i.e., ambiguity is monetized. Retail IT risk calculus: an order-to-cash outage means empty shelves, so unproven protocols are rejected regardless of elegance.",
+    "relevance": "The cold-start problem is not marketing: the parties whose adoption would tip the network are the ones the design benefits least and risks most.",
+    "confidence": "verified-web",
+    "source": "https://getproductiv.com/walmart-otif-routing-guide-compliance ; https://www.spscommerce.com/community/articles/walmart-otif-dispute-process"
+   },
+   {
+    "claim": "Every prior 'semantically richer, self-describing' EDI replacement failed to displace EDIFACT/X12 in retail: ebXML (2001), RosettaNet PIPs, OAGIS, UBL, GS1 XML. Peppol succeeded only via government e-procurement mandates — and still requires country CIUS profiles and Schematron validation artifacts, proving shared syntax plus shared semantics does not eliminate bilateral/market profiling.",
+    "evidence": "EANCOM subsets remain the dominant European retail interchange 25+ years after XML alternatives shipped; Peppol BIS 3.0 exists as a constrained CIUS of UBL precisely because the base standard was too permissive to be interoperable.",
+    "relevance": "Direct historical falsification of 'better self-description drives voluntary adoption'; profiles re-emerge because business variance, not format, is the binding constraint.",
+    "confidence": "model-knowledge"
+   },
+   {
+    "claim": "Vector-embedding 'semantic coordinates' as a wire format is unsound: embeddings are non-deterministic across model versions, non-invertible (exact GTINs, prices, quantities, legal text are unrecoverable from vectors), and approximate — nearest-neighbor decoding can flip net to gross price. Interchange of financial/legal data requires bit-exact, deterministic, auditable encoding; a shared embedding space also creates a worse bilateral dependency (shared model weights and versions).",
+    "evidence": "By construction, embedding maps are lossy many-to-one projections; no audit regime accepts 'approximately this invoice'. VAT law requires reproducing invoice content exactly for 8–11 years — impossible if decoding depends on a model artifact.",
+    "relevance": "One of the AI-suggested mechanisms; it fails determinism, invertibility, and legal-archiving requirements simultaneously and should be discarded.",
+    "confidence": "model-knowledge"
+   },
+   {
+    "claim": "Blockchain shared-state tokens replacing documents already failed at maximum-strength backing: TradeLens (Maersk + IBM, launched 2018) was discontinued — announced Nov 2022, offline by end of Q1 2023 — for lack of commercial viability and full industry collaboration. Additionally, prices/volumes on shared ledgers raise confidentiality and competition-law problems, and VAT law requires archived invoice documents, not ledger state.",
+    "evidence": "Maersk's own announcement cites failure to achieve 'the level of commercial viability necessary'; competitors refused a platform part-owned by a rival — the same dynamic a supplier-facing token network would hit with Rewe/Edeka/Walmart.",
+    "relevance": "Empirical disproof of the AI-suggested blockchain-token idea in almost exactly this domain (multi-party trade documents).",
+    "confidence": "verified-web",
+    "source": "https://www.maersk.com/news/articles/2022/11/29/maersk-and-ibm-to-discontinue-tradelens"
+   },
+   {
+    "claim": "Edge agents doing change-data-capture on Walmart's (or any retailer's) SAP are a non-starter: no CISO grants a third party database-level CDC access (vendor security review, SOX segregation-of-duties, audit trail requirements); SAP's indirect/digital-access licensing charges for exactly such access patterns; and CDC couples to undocumented internal tables that change with every patch — strictly more fragile than an interface contract. EDI boundaries exist to keep internals private.",
+    "evidence": "Enterprise integration practice: retailers expose curated interfaces (IDoc, API, EDI) precisely to decouple partners from internal schemas; SAP's Diageo ruling and digital-access licensing model penalize third-party systems triggering document creation.",
+    "relevance": "The third AI-suggested mechanism fails on security governance, licensing economics, and engineering fragility — before any protocol design question arises.",
+    "confidence": "model-knowledge"
+   }
+  ]
+ },
+ "verify": {
+  "verdicts": [
+   {
+    "claim": "A 'map' performs three separable functions (syntax translation, schema alignment, business-semantics reconciliation); self-describing messages solve the first, partially the second, none of the third, which dominates onboarding effort",
+    "verdict": "plausible",
+    "note": "Analytical decomposition resting on cited operating experience; no dates, specs, or quantities to check. Consistent with industry writing that EDI onboarding cost sits in partner-specific semantics/testing, not parsing, but the effort-dominance assertion is not independently verifiable.",
+    "source": ""
+   },
+   {
+    "claim": "Semantic variance set 1: DTM+2/17/64/63 delivery-date variants; net vs gross of ALC; NAD+BY/DP/IV GLN routing split across Edeka/Rewe cooperative entities; line- vs document-level VAT rounding rejections",
+    "verdict": "confirmed",
+    "note": "All named codes verified: EDIFACT 2005 codelist has 2=delivery requested, 17=estimated, 63=latest, 64=earliest; NAD 3035 has BY=buyer, DP=delivery party (ship-to), IV=invoicee (bill-to); ALC is the EANCOM allowance/charge segment. Edeka/Rewe cooperative entity-splitting and VAT-rounding rejections are consistent with retail MIG practice.",
+    "source": "https://www.stedi.com/edi/edifact/elements/6063 (codelists); https://www.edi.ba/en/segments/nad/; https://www.gs1.org/sites/default/files/docs/eancom/s4/desadv.pdf"
+   },
+   {
+    "claim": "Semantic variance set 2: ORDRSP line-echo requirements; INVOIC validation against pre-loaded PRICAT/GDSN; UoM/price-basis ambiguity; mandatory batch/best-before DTM+361 and catch-weight for fresh food; RTI/Pfand invoice lines; DESADV/SSCC references for three-way match",
+    "verdict": "confirmed",
+    "note": "Key spec detail verified: DTM+361 = 'Best before date' in EANCOM DESADV (SG20, tied to batch/PCI), and Rewe's published DESADV D.96A/D.01B MIGs include it. Other items (PRICAT/GDSN price alignment, catch-weight, RTI/Pfand, SSCC three-way match) match GS1 retail profiles; 'validates ONLY against PRICAT' is slightly absolute but directionally right.",
+    "source": "https://www.gs1.org/sites/default/files/docs/eancom/ean02s4/part2/desadv/0551.htm ; https://supplier.rewe-group.com (DESADV D.96A/D.01B guidelines)"
+   },
+   {
+    "claim": "One received message underdetermines schema/rules (exhibits one path through optionals); a map inferred from one instance fails silently; evidence cites conditionality like 'if variable weight then QTY+192'",
+    "verdict": "corrected",
+    "correction": "The information-theoretic core stands, but the illustrative code is wrong: in EDIFACT codelist 6063, qualifier 192 = 'Free goods quantity' (goods free of charge), not a variable-weight quantity. EANCOM catch-weight handling instead uses variable-measure GTINs with the invoiced/despatched quantity (e.g. QTY+47) expressed per KGM plus piece counts/measurements — cite that, or QTY+192 only for free-goods lines.",
+    "note": "Verified 6063 codelist: 192 = Free goods quantity. The single-instance-underdetermines-grammar argument itself is sound and unrefutable analytically; only the named qualifier example is misattributed.",
+    "source": "https://www.truugo.com/edifact/d96a/cl6063/ ; https://www.stedi.com/edi/edifact/elements/6063"
+   },
+   {
+    "claim": "Counterparty-shipped executable requirements invert trust; XXE and billion-laughs attacks arose from self-describing sender-controlled document machinery; receivers re-validate anyway, creating dueling rule sets",
+    "verdict": "confirmed",
+    "note": "Security precedent verified: billion laughs (exponential entity expansion DoS, traced to Amit Klein 2002) and XXE both exploit XML's sender-supplied DTD/entity machinery. The 'no bank or retailer executes counterparty validation logic' universal and dueling-rule-set prediction are analytical but consistent with practice.",
+    "source": "https://en.wikipedia.org/wiki/Billion_laughs_attack ; https://www.geeksforgeeks.org/xml-external-entity-xxe-and-billion-laughs-attack/"
+   },
+   {
+    "claim": "Receivers can never skip normalization: ERP-internal models force projection of inbound documents; 'no normalization layer' relocates O(N^2) pairwise alignment into every receiver's adapter, contradicting 'works with any ERP'",
+    "verdict": "plausible",
+    "note": "Purely analytical architecture argument with no dates/specs/quantities to check. The premise (inbound documents must be mapped into SAP/ERP internal masters to post) is standard integration knowledge; the O(N^2) hub-vs-peer trade-off is textbook. Nothing found that refutes it.",
+    "source": ""
+   },
+   {
+    "claim": "EU VAT requires invoice integrity/authenticity/archiving; Germany: all businesses must receive EN 16931 e-invoices since 1 Jan 2025, issuance phased 2027 (>=EUR 800k turnover) to 2028; ViDA adopted 11 Mar 2025 mandates EN 16931 e-invoices plus near-real-time digital reporting for intra-EU B2B from 1 July 2030",
+    "verdict": "confirmed",
+    "note": "Every date checks out: ViDA adopted by EU Council 11 March 2025, published OJ 25 March 2025; intra-EU B2B e-invoicing (EN 16931) plus DRR from 1 July 2030; Germany reception obligation 1 Jan 2025, issuance 1 Jan 2027 for >EUR 800k turnover, all businesses 1 Jan 2028 (Wachstumschancengesetz). Even the evidence's EN 16931-1:2026 revision is real (CEN, 18 March 2026, ViDA/B2B-ready).",
+    "source": "https://www.nortonrosefulbright.com/en/knowledge/publications/7f7569e5/vat-in-the-digital-age-vida-package-finally-adopted ; https://www.cleartax.com/de/en/e-invoicing-timeline-in-germany ; https://www.vatupdate.com/2026/04/02/cen-approves-en-16931-12026-updating-the-european-einvoicing-standard-for-vida/"
+   },
+   {
+    "claim": "Retail giants have weak-to-negative adoption incentive; Walmart OTIF charges 3% of cost of goods on non-compliant shipments, 98% threshold, automated via invoice deduction through HighRadius; ~30-50% of fines disputable",
+    "verdict": "confirmed",
+    "note": "Core figures verified: Walmart OTIF target 98%, 3% of COGS charged on non-compliant cases, fines invoiced and disputed through HighRadius (15-30 day window). Only the evidence's '30-50% of fines disputable' figure could not be located in the cited sources — treat that sub-number as unverified, though high dispute-reversal rates are documented anecdotally.",
+    "source": "https://getproductiv.com/walmart-otif-routing-guide-compliance ; https://www.spscommerce.com/community/articles/walmart-otif-dispute-process"
+   }
+  ]
+ }
+}

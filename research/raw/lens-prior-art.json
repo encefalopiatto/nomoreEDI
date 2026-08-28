@@ -1,0 +1,142 @@
+{
+ "key": "prior-art",
+ "research": {
+  "summary": "Thirty years of prior art shows a stable pattern: machine-readable self-description reliably eliminates the SYNTAX layer (parsing, structural validation) and never the SEMANTIC layer (binding foreign fields to the receiver's ERP model, code lists, units, identifier schemes, tax/process logic, master data). XML's \"self-describing data will replace EDI\" hype (1998-2003) produced dozens of competing XML B2B vocabularies and left mapping intact. ebXML CPP/CPA (OASIS 2002, ISO 15000) is the closest prior art to the proposed idea — machine-readable partner capability profiles plus automated agreement formation and in-band negotiation — and it failed precisely at automated negotiation: the negotiation layer was never completed or implemented at scale; CPAs were hand-written; the market chose dumb AS2 transport plus human mapping. RosettaNet PIPs (machine-readable two-way choreographies, hub-sponsored by Intel/Cisco/HP) worked only inside high-tech with certification testing still required, and wound down into GS1 US by end-2013. X12 SEF encoded full implementation guides machine-readably in the early 1990s including inter-field dependencies — the industry kept shipping PDFs; Stedi's JSON-Schema Guides (2022) are the same idea and demonstrably improve validation/translation, yet Stedi still operates a managed mapping/onboarding service. Semantic Web/GoodRelations shows ontology publication does not produce ontology ALIGNMENT; schema.org spread only because one asymmetric consumer (Google) paid publishers in search ranking. ISO 20022's central dictionary still required years of human market-practice harmonization (CBPR+, HVPS+, BIS CPMI) because dictionaries permit optionality, and optionality is where mapping lives. UBL/EN 16931/Peppol is the actual EDI-displacement success in European retail-adjacent invoicing: it won by MANDATE plus ONE fixed profile plus centralized executable Schematron validation — eliminating bilateral variance rather than describing it. OpenAPI succeeded because one side dictates, the contract is executable (codegen, mock, validate), and no negotiation exists. Avro's embedded writer schema solves decoding within one org's registry, not cross-org meaning. Transferable lessons: make requirements executable, not descriptive; kill optionality rather than self-describe it; expect asymmetric adoption physics; treat bilateral testing as data-quality/trust establishment, which schemas cannot carry.",
+  "key_points": [
+   {
+    "claim": "Late-1990s XML hype explicitly promised self-describing data would replace EDI and eliminate integration work; it failed — businesses kept EDI, and XML spawned competing B2B vocabularies (cXML, xCBL, ebXML, RosettaNet) that recreated the mapping problem at a new syntax layer.",
+    "evidence": "xml.com's 1999 'XML and EDI: Lessons Learned' and EDI-industry retrospectives document the 'XML will replace EDI because it is self-describing, flexible, free' claim and its non-materialization; EDI remains dominant for B2B transactions.",
+    "relevance": "Direct precedent: 'radically self-describing' was XML's exact pitch; self-description changed parsing, not meaning-binding.",
+    "confidence": "verified-web",
+    "source": "https://www.xml.com/pub/1999/08/edi/index.html"
+   },
+   {
+    "claim": "ebXML CPP/CPA (OASIS Standard, ratified December 2002; ISO 15000) is the closest prior art: machine-readable partner capability profiles (CPP) and machine-formed agreements (CPA) with envisioned automated negotiation. Automated CPA negotiation was never completed or deployed at scale; CPAs were hand-crafted; industry defaulted to AS2 + human mapping.",
+    "evidence": "OASIS ratification announcement Dec 2002; academic literature (e.g., 'Towards a Negotiation Protocol for ebXML', 2012) notes ebXML lacked a working negotiation protocol and no runtime CPP/CPA alteration; CPPA v3 (2010s) saw negligible uptake.",
+    "relevance": "The proposal's in-band change/enrichment requests are a re-invention of CPA negotiation — the specific piece that killed ebXML adoption.",
+    "confidence": "verified-web",
+    "source": "https://www.oasis-open.org/2002/12/01/ebxml-collaboration-protocol-profile-and-agreement-ratified-as-oasis-open-standard/"
+   },
+   {
+    "claim": "RosettaNet PIPs (from 1999) were machine-readable two-way process choreographies with schemas plus business rules, backed by Intel, HP, IBM, Cisco, Microsoft. Adoption stayed confined to high-tech electronics (plus state-sponsored programs in Taiwan, Japan, Korea); certification/partner testing was still required; RosettaNet folded into GS1 US and its standards site shut down end of 2013.",
+    "evidence": "Wikipedia/GS1 US history: founded 1998, subsidiary of UCC/GS1 US from 2002, standalone site closed end-2013; PIP directory now a GS1 US archive; BizTalk-era tooling shows heavy per-PIP implementation effort.",
+    "relevance": "Even consortium muscle from the exact target class of giants could not spread machine-readable choreographies beyond one vertical, and testing never disappeared.",
+    "confidence": "verified-web",
+    "source": "https://en.wikipedia.org/wiki/RosettaNet"
+   },
+   {
+    "claim": "X12 SEF (Foresight Corp, early 1990s, public domain, later TIBCO) already encoded complete machine-readable implementation guides — field sizes, code values, inter-field and inter-segment dependencies. It became a niche tooling format; the industry kept exchanging PDF/Word guides for 30 more years.",
+    "evidence": "SEF documentation (edidev.com, CData Arc) confirms scope incl. dependencies and code lists across X12 and EDIFACT; SEF never displaced PDF guides as the norm despite solving 'machine-readable spec' in ~1993.",
+    "relevance": "Machine-readable requirements formats existing for 30 years without eliminating bilateral testing proves availability of the format was never the bottleneck.",
+    "confidence": "verified-web",
+    "source": "https://www.edidev.com/eval_SefFile.html"
+   },
+   {
+    "claim": "Stedi Guides (2022) are the modern SEF: JSON-Schema-based machine-readable X12 implementation guides covering all 321 transaction sets, powering programmatic validation and EDI-JSON translation via API. They demonstrably compress parse/validate work — yet Stedi still sells managed onboarding and mapping, because binding guide fields to customer internal models remains human/AI work.",
+    "evidence": "Stedi blog 'Shareable EDI implementation guides' (Oct 2022) and docs: guides backed by JSON Schema, EDI Translate API validates/translates against a guide ID; Stedi separately offers a Mappings product and managed service.",
+    "relevance": "Best current evidence for what self-describing specs actually eliminate (validation, parsing) versus what persists (semantic mapping, partner onboarding).",
+    "confidence": "verified-web",
+    "source": "https://www.stedi.com/blog/shareable-edi-implementation-guides-for-modern-edi-integrations"
+   },
+   {
+    "claim": "GoodRelations (Hepp, from 2002) became schema.org's e-commerce core in November 2012 and achieved wide deployment (e.g., BestBuy) — but only because one asymmetric consumer, Google, rewarded markup with rich snippets. OWL semantics and ontology publication never produced automatic ontology alignment between independent business systems.",
+    "evidence": "schema.org blog and W3C list post, 2012-11-08, announce full GoodRelations integration; adoption literature ties deployment to SEO incentives, not to machine reasoning over commerce semantics.",
+    "relevance": "Publishing semantics is cheap; aligning them is the cost. Adoption followed a single powerful consumer's incentive, not P2P semantic interoperability.",
+    "confidence": "verified-web",
+    "source": "https://blog.schema.org/2012/11/08/good-relations-and-schema-org/"
+   },
+   {
+    "claim": "ISO 20022 has exactly what the proposal wants — a central data dictionary and machine-readable e-repository — yet banks needed multi-year human working groups (CBPR+ for correspondent banking, HVPS+ for market infrastructures, plus BIS CPMI harmonized data requirements) to write usage guidelines restricting the standard's optionality before interoperability was achievable.",
+    "evidence": "ECB T2 consultation documents on HVPS+/CBPR+ differences (2023); SWIFT ISO 20022 Payments Interoperability Charter (2024); BIS CPMI harmonisation reports (2023-2025) — all post-date the dictionary by ~15 years.",
+    "relevance": "Strongest counterexample: a single canonical dictionary with machine-readable schemas still yields divergent implementations; optionality, not spec opacity, is where mapping work lives.",
+    "confidence": "verified-web",
+    "source": "https://www.ecb.europa.eu/paym/groups/shared/docs/711a7-2023-06-20-t2-cg-item-4.3.1-hvpsplus-and-cbprplus-differences.pdf"
+   },
+   {
+    "claim": "UN/CEFACT's Core Component Library and Cross-Industry Invoice gained real traffic only after EU Directive 2014/55 mandated the EN 16931 semantic core model; even then, two permitted syntaxes (UBL 2.1, CII D16B) plus national CIUS variants (XRechnung, Factur-X/ZUGFeRD) re-created variant-to-variant mapping and validation work.",
+    "evidence": "EN 16931 binds UBL 2.1 and CII D16B as its two official syntaxes; CII dominates DACH/France via XRechnung and Factur-X while Peppol uses UBL — converters between them are a product category.",
+    "relevance": "Even a legally mandated shared semantic model fragments into profiles the moment jurisdictions add requirements — the proposal's per-partner 'requirements' would fragment faster.",
+    "confidence": "verified-web",
+    "source": "https://www.theinvoicinghub.com/en-16931/"
+   },
+   {
+    "claim": "UBL is the one genuine EDI-displacement success in European B2B/B2G documents, and it won by the opposite mechanism to self-description: government mandate (Denmark OIOUBL 2005, Directive 2014/55), ONE fixed Peppol BIS profile, a four-corner network, and centralized executable Schematron validation — eliminating bilateral variance rather than describing it per message.",
+    "evidence": "UBL v2.1 = ISO/IEC 19845:2015; Peppol (launched 2008) exchanges UBL-conformant documents through certified Access Points with shared validation artifacts; onboarding requires no bilateral schema testing because the profile is non-negotiable.",
+    "relevance": "Shows the proven recipe for killing bilateral EDI testing in Procuros' home market: fix one profile and validate centrally — not per-message self-description.",
+    "confidence": "verified-web",
+    "source": "https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=ubl"
+   },
+   {
+    "claim": "Avro embeds the writer's schema in every file/stream and resolves reader-vs-writer schemas by field name; self-describing protobuf messages carry their FileDescriptorSet. Both solve decoding and structural evolution within one organization's governed schema registry; neither claims nor delivers semantic equivalence between independently designed schemas — protobuf's docs call self-description a rarely-used debugging feature.",
+    "evidence": "Avro spec's schema-resolution rules operate on names/types only; Confluent Schema Registry compatibility checks are structural. Google protobuf documentation describes self-describing messages as niche.",
+    "relevance": "The data-engineering world already ran this experiment: embedded schemas make parsing automatic and meaning untouched — 'field-to-meaning mapping from one received message' exceeds what schema carriage can do.",
+    "confidence": "model-knowledge"
+   },
+   {
+    "claim": "OpenAPI (Swagger donated to Linux Foundation, Dec 2015) is the success case for machine-readable contracts, and its success conditions are: one side unilaterally dictates the contract, zero negotiation, and the spec is executable (codegen, mock servers, request validation, conformance tests). B2B doc exchange between peers of comparable power satisfies none of these by default.",
+    "evidence": "OpenAPI history (SmartBear acquisition Mar 2015, OpenAPI Initiative Dec 2015); ecosystem consensus that value comes from codegen/validation as single source of truth. Providers version-break consumers; consumers adapt — no symmetric change-request protocol exists or is needed.",
+    "relevance": "What transfers: executable specs and generated validators/SDKs. What does not: P2P symmetry — the proposal's peer negotiation is precisely the part OpenAPI never had to solve.",
+    "confidence": "verified-web",
+    "source": "https://dev.to/mikeralphson/a-brief-history-of-the-openapi-specification-3g27"
+   },
+   {
+    "claim": "Across all cases the residual work is identical and never schema-expressible: code-list and unit translation, identifier-scheme reconciliation (GLN/GTIN vs internal numbers), tax and process logic, master-data alignment, and sender data-quality divergence from their own spec. Bilateral testing persists because it establishes trust in DATA and PROCESS behavior, not comprehension of the spec.",
+    "evidence": "RosettaNet required PIP certification despite machine-readable choreographies; ISO 20022 needed market practice groups despite a dictionary; Peppol replaced bilateral testing with central conformance, not with self-description; Stedi validates syntax but sells mapping.",
+    "relevance": "Design lesson set: make requirements executable test suites; kill optionality (one profile) instead of describing variance; expect adoption only via asymmetric power or mandate; keep semantic binding (now LLM-assisted) as an explicit, chargeable step — which is Procuros' current hub business.",
+    "confidence": "model-knowledge"
+   }
+  ]
+ },
+ "verify": {
+  "verdicts": [
+   {
+    "claim": "Late-1990s XML hype promised replacing EDI; failed; spawned cXML, xCBL, ebXML, RosettaNet recreating mapping problem",
+    "verdict": "confirmed",
+    "note": "xml.com article verified: Alan Kotok, 'XML and EDI: Lessons Learned and Baggage to Leave Behind', Aug 4 1999; it documents the promise ('extending the benefits of EDI... with considerably less pain and expense') rather than the retrospective failure. Vocabularies and EDI's continued dominance are well documented elsewhere.",
+    "source": "https://www.xml.com/pub/1999/08/edi/index.html"
+   },
+   {
+    "claim": "ebXML CPP/CPA ratified as OASIS Standard December 2002 (ISO 15000); automated CPA negotiation never completed; CPAs hand-crafted",
+    "verdict": "confirmed",
+    "note": "OASIS announcement confirms CPPA v2.0 ratified Dec 2, 2002, and itself says v2.0 'sets the stage for the standardized CPA negotiation process to come' — which never came. CPPA became ISO 15000-1:2004. Minor nuance: CPPA v3 was approved only as an OASIS Committee Specification in Oct 2020 (developed through the 2010s), never an OASIS Standard, with negligible tooling.",
+    "source": "https://www.oasis-open.org/2002/12/01/ebxml-collaboration-protocol-profile-and-agreement-ratified-as-oasis-open-standard/"
+   },
+   {
+    "claim": "RosettaNet founded 1998, PIPs from 1999, backed by Intel/HP/IBM/Cisco/Microsoft; adoption confined to high-tech plus Asian state programs; UCC subsidiary 2002; standards site shut end-2013, folded into GS1 US",
+    "verdict": "confirmed",
+    "note": "Wikipedia confirms 1998 founding, end-2013 website shutdown, management under GS1 US. Other sources confirm founding members included Intel, HP, IBM, Microsoft, Cisco; first PIPs published 1999; subsidiary of Uniform Code Council from 2002; strong semiconductor-industry concentration and Asian government support (Japan, Taiwan, Malaysia, etc.).",
+    "source": "https://en.wikipedia.org/wiki/RosettaNet"
+   },
+   {
+    "claim": "X12 SEF (Foresight Corp, early 1990s, public domain, later TIBCO) encoded complete machine-readable implementation guides incl. dependencies; stayed niche while PDF/Word guides persisted",
+    "verdict": "confirmed",
+    "note": "SEF 1.6 spec (© 2000 Foresight Corp) verified: encodes element sizes, .CODES code lists, dependent usage and .SEMREFS semantic rules across X12, EDIFACT, TRADACOMS. CData/EdiNation confirm Foresight put it in the public domain and is now part of TIBCO. Caveat: the exact 'early 1990s' origin date is not documented in accessible sources — only that versions 1.0-1.6 predate 2000.",
+    "source": "https://arc.cdata.com/resources/edi/sef.rst"
+   },
+   {
+    "claim": "Stedi Guides (2022): JSON-Schema-based machine-readable X12 guides covering all 321 transaction sets, powering validation and EDI-JSON translation; Stedi still sells mapping/onboarding",
+    "verdict": "confirmed",
+    "note": "Blog verified: Oct 20, 2022, 'machine-readable JSON Schema artifacts', 'built-in support for all X12 transaction sets and releases', native EDI Translate API integration for validate/parse/generate. The '321' figure appears in Stedi-related material (CIOReview: 'all 30+ X12 releases and 321 transaction sets'), not in the cited blog itself. Mappings product and managed onboarding are real Stedi offerings.",
+    "source": "https://www.stedi.com/blog/shareable-edi-implementation-guides-for-modern-edi-integrations"
+   },
+   {
+    "claim": "GoodRelations (Hepp, from 2002) became schema.org's e-commerce core Nov 2012; deployed by BestBuy; adoption driven by Google rich snippets, not automatic ontology alignment",
+    "verdict": "confirmed",
+    "note": "Hepp's own announcement (public-vocabs, 2012-11-08) confirms full schema.org integration as its e-commerce core; BestBuy, Kmart, Volkswagen among adopters. Minor caveat: development start is variously dated 2001-2002 (Wikipedia suggests 2001; v1.0 ontology released 2008). The SEO-incentive-driven-adoption point is well supported in the literature.",
+    "source": "https://lists.w3.org/Archives/Public/public-vocabs/2012Nov/0015.html"
+   },
+   {
+    "claim": "ISO 20022 has central dictionary/machine-readable e-repository, yet banks needed multi-year working groups (CBPR+, HVPS+, BIS CPMI) to restrict optionality before interoperability",
+    "verdict": "confirmed",
+    "note": "Verified: CBPR+ and HVPS+ are real usage-guideline working groups restricting ISO 20022 optionality; ECB published HVPS+/CBPR+ differences documents (2023); SWIFT ISO 20022 Payments Interoperability Charter v1.0 (2024); BIS CPMI harmonised ISO 20022 data requirements (2023). ISO 20022 dates from 2004, so ~15-year gap holds.",
+    "source": "https://www.bis.org/cpmi/publ/d215.htm"
+   },
+   {
+    "claim": "UN/CEFACT CCL/CII gained traffic only after Directive 2014/55 mandated EN 16931; two syntaxes (UBL 2.1, CII D16B) plus national CIUS (XRechnung, Factur-X/ZUGFeRD) recreated mapping/validation work",
+    "verdict": "confirmed",
+    "note": "Verified: EN 16931 (mandated via Directive 2014/55/EU) binds exactly two syntaxes, OASIS UBL 2.1 and UN/CEFACT CII D16B; XRechnung and Factur-X/ZUGFeRD are CIUS/profiles; Peppol BIS uses UBL; UBL-CII converters are a real product category. Minor nuance: XRechnung permits both UBL and CII, not CII only.",
+    "source": "https://www.invoicenavigator.eu/learn/en16931"
+   }
+  ]
+ }
+}

@@ -1,0 +1,418 @@
+<title>Contracts, Not Maps</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper: #F8F9FB;
+    --surface: #FFFFFF;
+    --ink: #171C2B;
+    --muted: #555D73;
+    --faint: #7B8299;
+    --line: #DCE0EA;
+    --line-soft: #E8EBF2;
+    --accent: #3341B8;
+    --accent-soft: #E9EBF9;
+    --keep: #0E7A46;
+    --keep-bg: #E3F2EA;
+    --reshape: #8A5F00;
+    --reshape-bg: #F7EED8;
+    --drop: #A93226;
+    --drop-bg: #F9E5E2;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+    --code-bg: #EEF0F6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12141C;
+      --surface: #191C27;
+      --ink: #E8EAF3;
+      --muted: #A2A9BF;
+      --faint: #7E86A0;
+      --line: #2B3042;
+      --line-soft: #232838;
+      --accent: #97A3F2;
+      --accent-soft: #232847;
+      --keep: #4CC38A;
+      --keep-bg: #14301F;
+      --reshape: #E2B03E;
+      --reshape-bg: #33290D;
+      --drop: #E5766A;
+      --drop-bg: #3A1B17;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --code-bg: #232838;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #12141C;
+    --surface: #191C27;
+    --ink: #E8EAF3;
+    --muted: #A2A9BF;
+    --faint: #7E86A0;
+    --line: #2B3042;
+    --line-soft: #232838;
+    --accent: #97A3F2;
+    --accent-soft: #232847;
+    --keep: #4CC38A;
+    --keep-bg: #14301F;
+    --reshape: #E2B03E;
+    --reshape-bg: #33290D;
+    --drop: #E5766A;
+    --drop-bg: #3A1B17;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --code-bg: #232838;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+  }
+  .page {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  header.masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1.75rem; margin-bottom: 2.25rem; }
+  header.masthead h1 {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    margin: 0.5rem 0 0.9rem;
+    text-wrap: balance;
+  }
+  .standfirst { font-size: 1.02rem; color: var(--muted); max-width: 62ch; margin: 0; }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
+    margin-top: 1.1rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem; color: var(--faint); letter-spacing: 0.05em;
+  }
+
+  .verdict {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+    padding: 1.4rem 1.6rem;
+    margin: 0 0 2.5rem;
+  }
+  .verdict p { margin: 0.5rem 0 0; }
+  .verdict .lede {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 700; font-size: 1.28rem; line-height: 1.3; letter-spacing: -0.01em;
+    margin: 0; text-wrap: balance;
+  }
+
+  h2 {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 800; font-size: 1.5rem; line-height: 1.15; letter-spacing: -0.015em;
+    margin: 3rem 0 0.9rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+    text-wrap: balance;
+  }
+  h2 .no {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--accent); display: block; margin-bottom: 0.45rem;
+  }
+  h3 {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 700; font-size: 1.08rem; letter-spacing: -0.005em;
+    margin: 1.9rem 0 0.5rem;
+  }
+  p { margin: 0.85rem 0; }
+  strong { font-weight: 600; }
+  ul, ol { padding-left: 1.3rem; margin: 0.85rem 0; }
+  li { margin: 0.4rem 0; }
+  li::marker { color: var(--faint); }
+
+  code, .m {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.84em;
+    background: var(--code-bg);
+    padding: 0.08em 0.35em;
+    border-radius: 3px;
+  }
+
+  figure.split { margin: 1.8rem 0 2rem; }
+  .bar {
+    display: flex; gap: 2px;
+    height: 34px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .bar > div { transition: filter 120ms ease; }
+  .bar > div:hover { filter: brightness(1.08); }
+  .seg-a { background: var(--s1); flex: 35; }
+  .seg-b { background: var(--s2); flex: 35; }
+  .seg-c { background: var(--s3); flex: 20; }
+  .seg-d { background: var(--s4); flex: 10; }
+  .bar-legend {
+    display: flex; flex-wrap: wrap; gap: 0.45rem 1.4rem;
+    margin-top: 0.8rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.74rem; color: var(--muted);
+  }
+  .bar-legend span { display: inline-flex; align-items: center; gap: 0.45rem; }
+  .chip {
+    width: 11px; height: 11px; border-radius: 3px; flex: none;
+    border: 1px solid rgba(0,0,0,0.12);
+  }
+  .bar-legend b { color: var(--ink); font-weight: 600; }
+  figcaption {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem; color: var(--faint); margin-top: 0.75rem; letter-spacing: 0.03em;
+  }
+
+  .tablewrap { overflow-x: auto; margin: 1.4rem 0 1.8rem; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.86rem; line-height: 1.45; }
+  th {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--faint); text-align: left;
+    padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.pa { font-family: Archivo, "Helvetica Neue", Arial, sans-serif; font-weight: 700; font-size: 0.84rem; white-space: nowrap; }
+
+  .pill {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em;
+    padding: 0.18rem 0.5rem; border-radius: 999px; white-space: nowrap;
+  }
+  .pill.keep { color: var(--keep); background: var(--keep-bg); }
+  .pill.reshape { color: var(--reshape); background: var(--reshape-bg); }
+  .pill.drop { color: var(--drop); background: var(--drop-bg); }
+
+  .callout {
+    background: var(--accent-soft);
+    border-radius: 5px;
+    padding: 1.1rem 1.3rem;
+    margin: 1.5rem 0;
+  }
+  .callout p { margin: 0.4rem 0; }
+  .callout .k {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .bets { display: grid; gap: 1rem; margin: 1.4rem 0; }
+  .bet {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 5px;
+    padding: 1.1rem 1.3rem;
+  }
+  .bet h4 {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 700; font-size: 0.98rem; margin: 0 0 0.4rem;
+  }
+  .bet p { margin: 0.35rem 0; font-size: 0.95rem; }
+  .bet .exp { color: var(--muted); font-size: 0.9rem; }
+  .bet .exp b { color: var(--ink); font-weight: 600; }
+
+  .foot {
+    margin-top: 3.5rem; padding-top: 1.4rem; border-top: 1px solid var(--line);
+    font-size: 0.85rem; color: var(--faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bar > div { transition: none; }
+  }
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <span class="eyebrow">nomoreEDI · design assessment</span>
+    <h1>Contracts, Not Maps</h1>
+    <p class="standfirst">Can a radically self-describing exchange language — where the message is the map, the requirements, the data checks, the response spec, and the connectivity config — replace EDI guidelines and bilateral testing entirely? Assessment against thirty years of adversarially fact-checked prior art, EU regulation, adoption history, and Procuros-internal ground truth.</p>
+    <div class="meta-row">
+      <span>AUG 2026</span>
+      <span>6 RESEARCH LENSES · 13 AGENTS</span>
+      <span>CLAIMS ADVERSARIALLY VERIFIED</span>
+      <span>OPERATIONAL EVIDENCE REVIEWED</span>
+    </div>
+  </header>
+
+  <div class="verdict">
+    <p class="lede">The instinct is right. The mechanism as stated is wrong. The fix is well-defined — and it keeps the disruption.</p>
+    <p>Requirements, scenario rules, response construction, and connectivity <em>should</em> be executable data that machines enforce instead of PDFs that humans interpret and test against for weeks. But the load must move from the message to a signed, versioned, content-addressed <strong>Trade Contract</strong> that every message references by hash — self-describing <em>by reference</em>. "Build the map from one received message" and "auto-apply in-band config changes" do not survive contact with the evidence; everything else in the vision does, in hardened form.</p>
+  </div>
+
+  <h2><span class="no">§ 1</span>The pitch attacks the wrong cost — and the right one is bigger</h2>
+  <p>A map does three jobs: <strong>syntax translation</strong> (EDIFACT → structure; commodity), <strong>schema alignment</strong> (their field ↔ canonical field), and <strong>business-semantics reconciliation</strong> — agreements about counterparties' <em>processes</em> that no self-labeled field can carry. Verified retail examples: is "delivery date" <code>DTM+2</code>, <code>+17</code>, <code>+63</code> or <code>+64</code>, and does it mean depot arrival or dispatch; unit price net or gross of <code>ALC</code> allowances; which of four GLNs (<code>NAD+BY/DP/IV</code>, payer) gets invoiced across Edeka/Rewe cooperative entities; line- vs document-level VAT rounding; <code>ORDRSP</code> echoing buyer line numbers; <code>INVOIC</code> validating only against previously loaded PRICAT master data; each/case/pallet ambiguity; batch and best-before (<code>DTM+361</code>) for fresh food; Pfand and RTI deposit lines.</p>
+  <p>Internal ground truth (Atlas, directional estimate — not measured time tracking) confirms where onboarding effort actually goes:</p>
+
+  <figure class="split">
+    <div class="bar" role="img" aria-label="Onboarding effort split: business and master-data alignment 30 to 40 percent, bilateral partner testing 30 to 40 percent, mapping 15 to 25 percent, syntax and normalizer configuration 5 to 15 percent">
+      <div class="seg-a" title="Business & master-data alignment · 30–40%"></div>
+      <div class="seg-b" title="Bilateral partner testing · 30–40%"></div>
+      <div class="seg-c" title="Mapping (JSONata) · 15–25%"></div>
+      <div class="seg-d" title="Syntax / normalizer · 5–15%"></div>
+    </div>
+    <div class="bar-legend">
+      <span><i class="chip" style="background:var(--s1)"></i>Business &amp; master-data <b>30–40%</b></span>
+      <span><i class="chip" style="background:var(--s2)"></i>Partner testing <b>30–40%</b></span>
+      <span><i class="chip" style="background:var(--s3)"></i>Mapping <b>15–25%</b></span>
+      <span><i class="chip" style="background:var(--s4)"></i>Syntax <b>5–15%</b></span>
+    </div>
+    <figcaption>FIG 1 · Trade-partner onboarding effort, Procuros (Atlas, directional estimate). Operational experience: partner turnaround sets the go-live date — a hypothesis current instrumentation cannot yet confirm (§ 4).</figcaption>
+  </figure>
+
+  <p><strong>"No maps" attacks at most a quarter of the problem. "No partner-in-the-loop testing, no ambiguous requirements" attacks the dominant three quarters</strong> — and operational experience holds that partner turnaround is what sets go-live dates. Same technology, different target: this reframing is the most important conclusion in the assessment. The industry economics agree: onboarding runs $750–2,500 setup per partner over 6–12 weeks, while deduction and dispute administration consumes 3–8% of suppliers' retail sales (Amazon ~7% of vendor revenue; Walmart OTIF 3% of COGS). The economically dominant prize is dispute prevention and change control, not mapping automation.</p>
+
+  <h2><span class="no">§ 2</span>Every component has been tried — the pattern is stable</h2>
+  <p>Machine-readable self-description reliably eliminates the <em>syntax</em> layer and never the <em>semantics</em> layer; formats win by forcing functions, never by merit. The receipts, adversarially verified:</p>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Prior art</th><th>What happened</th><th>Lesson</th></tr>
+      <tr><td class="pa">XML, 1998–2003</td><td>"Self-describing data will replace EDI" — the identical pitch. Failed; spawned cXML, xCBL, ebXML, RosettaNet, which recreated mapping in new syntax.</td><td>Self-description ≠ shared meaning.</td></tr>
+      <tr><td class="pa">ebXML CPP/CPA, 2002</td><td>The closest ancestor: machine-readable partner profiles <em>including transport bindings</em>, machine-formed agreements, envisioned automated negotiation. The negotiation layer never shipped; CPAs were hand-written; the market chose AS2 + human mapping.</td><td>In-band change requests are CPA negotiation reinvented — "why now" must be answered (§ 6).</td></tr>
+      <tr><td class="pa">X12 SEF, 1990s</td><td>Complete machine-readable implementation guides <em>including conditional field dependencies</em> — scenario conditionality, solved ~1993. Industry kept shipping PDFs for 30 years. Stedi Guides (2022) are the modern version; Stedi still sells managed mapping.</td><td>Format availability was never the bottleneck. <em>Enforcement</em> is.</td></tr>
+      <tr><td class="pa">RosettaNet PIPs</td><td>Machine-readable two-way choreographies with response deadlines (Time-to-Acknowledge / Time-to-Perform) ran in production high-tech supply chains — and never left the vertical; certification testing persisted; folded into GS1 US in 2013.</td><td>Response declarations are proven implementable — and proven insufficient for adoption.</td></tr>
+      <tr><td class="pa">ISO 20022</td><td>Central dictionary + machine-readable repository; banks still needed years of human working groups (CBPR+, HVPS+) to restrict optionality before interoperating.</td><td>Dictionaries permit optionality; optionality is where mapping lives.</td></tr>
+      <tr><td class="pa">PEPPOL / EN 16931</td><td>The actual EDI-displacement success. Killed bilateral testing by the <em>opposite</em> mechanism: one fixed profile, centrally published executable validators (~983 rules UBL / ~808 CII), registry discovery (SML/SMP publishes each receiver's doc types, endpoint, certificate) — plus legal mandates. Variance still crept back through governed channels (country CIUS, XRechnung).</td><td>Computed conformance against published artifacts is the proven cure. Per-message schema freedom is the disease it cured.</td></tr>
+      <tr><td class="pa">OpenAPI</td><td>Machine-readable contracts won — where one side dictates, the contract is executable, and there is no negotiation.</td><td>Retail EDI also has one dictating side (the retailer's MIG). The blocker is incentive, not feasibility.</td></tr>
+      <tr><td class="pa">HL7 FHIR</td><td>Receiver-published machine-readable profiles + executable validators + automated conformance testing (Inferno) work at scale today — after a regulatory mandate; profiles proliferated; certification persisted.</td><td>The living proof of the § 5 architecture, and its adoption warning.</td></tr>
+      <tr><td class="pa">APERAK / X12 824</td><td>Standardized in-band business-level rejections have existed for decades — barely implemented, because every ERP team had to build them by hand.</td><td>The enrichment loop lives only if the runtime emits and consumes it for free.</td></tr>
+      <tr><td class="pa">Siren · HAL-FORMS · OpenAPI Links</td><td>Messages declaring next actions and how to construct them: technically adequate, marginally adopted — pre-LLM clients were hardcoded anyway. Agentic clients invert the calculus.</td><td>The response-affordance consumer that makes it pay has only just arrived.</td></tr>
+      <tr><td class="pa">TradeLens · embeddings · CDC agents</td><td>Blockchain shared state died with Maersk+IBM behind it (2023). Embeddings as wire format: non-deterministic, non-invertible, unauditable. CDC agents on a retailer's SAP: CISO/SOX/licensing non-starter.</td><td>Discard all three.</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="no">§ 3</span>Why the strong form fails</h2>
+  <h3>One message cannot carry the rules</h3>
+  <p>A received message exhibits one path through the optional and conditional structure — no promotions, returns, credit notes, consignment, variable weight, year-end cases. The scenario-conditionality requirement itself concedes the point: conditional rules are <em>intensional</em>, and no instance stream enumerates them. A map inferred from an instance fails <strong>silently</strong>, and silent failure in order-to-cash is wrong payments at scale — which is why EDI testing exists (it validates money flows, not parsing) and why enterprises would re-impose certification. The rules must travel as a complete declared artifact. At that point you are shipping a contract, and the only question is embed-per-message (50–500&nbsp;KB against 2–20&nbsp;KB typical ORDERS, re-trusted every message) or reference-by-hash (~100 bytes, immutable, cacheable, first contact may inline it). Reference wins on every axis — <strong>and nothing observable is lost: a naive client receiving one message can still resolve everything needed to process it and respond.</strong> "The message is the config file" survives as the design invariant; literal embedding does not.</p>
+  <h3>Counterparty-shipped executable config is an attack surface</h3>
+  <p>Sender-controlled document machinery is where XML's worst CVE classes came from (billion-laughs, XXE). Executable validation in-band is a DoS vector and a trust inversion — the sender grades its own homework, receivers re-validate anyway, and you get dueling rule sets. Live config changes in-band — new endpoint, new bank details, new invoicee GLN — are the invoice-redirection fraud pattern with a machine-speed autoloader; most SME endpoints are unattended, so in-band negotiation often has no responder. The fixes are all the same shape: rules in a deterministic, non-Turing-complete, cost-bounded language (<strong>CEL</strong> — production-proven for exactly this threat model in Kubernetes admission control); contracts signed and published, not injected; config changes as signed version proposals with effective dates, applied by policy, never silently. Connectivity additionally has a bootstrap problem by construction — you need connectivity to receive the message declaring connectivity — so transport capability is published registry-style (PEPPOL's SML/SMP is the proven shape; ebXML CPP carried transport bindings in 2002).</p>
+  <h3>The law has pre-awarded the invoice</h3>
+  <p>Germany: receive EN 16931 since Jan 2025, issue from 2027/28. France: via ~147 certified platforms from Sep 2026/27. Belgium: PEPPOL B2B since Jan 2026. ViDA: EN 16931 for intra-EU B2B from July 2030, domestic harmonization by 2035. A new language either projects into EN 16931 or produces legally void invoices. <strong>The open, unregulated space is exactly where retail EDI lives: ORDERS, ORDRSP, DESADV/SSCC, PRICAT.</strong></p>
+  <h3>Normalization doesn't disappear — its authorship does</h3>
+  <p>Every inbound document must be projected into each ERP's fixed internal model; true P2P with no shared semantics relocates O(N²) alignment into every receiver — EDI's disease restated. What can die is the <em>hand-written</em> layer: with contracts as compilation targets, projections are generated and regenerated, not authored and maintained.</p>
+
+  <h2><span class="no">§ 4</span>What the operational evidence says</h2>
+  <p>A review of live operational evidence (Aug 2026) sharpened the epistemic status of every internal sizing claim:</p>
+  <ul>
+    <li><strong>Requirements: structured implementation, no structured contract</strong> <em>(inferred, system-supported)</em> — transformations, relationship configuration, canonical checks and extracted guideline knowledge exist <em>after</em> onboarding; authoritative structured requirement publication <em>from the partner</em> generally does not. Partner intent stays spread across PDFs/MIGs, prose tables, commercial-condition sheets, master-data prerequisites, and conventions embedded in mappings. The tribal share is not defensibly quantifiable today — that gap is exactly what a Trade Contract fills.</li>
+    <li><strong>Connectivity: diverse and real, cost share unmeasured</strong> <em>(categories verified)</em> — AS2, SFTP, API, and WebEDI each show &gt;50 ready integrations; X.400/SMTP/VAN/PEPPOL are not verified as first-class categories, and some routes <em>labelled</em> "X.400" are technically AS2. The estate's own connectivity metadata has drifted — itself an argument for signed, versioned capability publication.</li>
+    <li><strong>Acknowledgements: machinery exists, narrowly</strong> <em>(limited capability verified)</em> — 8 ready <code>ACKNOWLEDGEMENT</code> relationships; one live APERAK sender on AS2/EDIFACT with recent traffic. Not theoretical — but nothing shows business rejections consistently reaching suppliers through a structured loop. Confirms the APERAK lesson from the inside: the loop creates value only if runtime-native. The eight relationships are a ready-made pilot bed.</li>
+    <li><strong>Onboarding duration: highly variable, partner-wait not instrumented</strong> <em>(cohorts verified)</em> — 93 completed onboardings Aug 2025–Aug 2026, monthly medians swinging 0–949 days; no single "typical duration" is quotable, and nothing isolates "test sent → partner sign-off". <strong>"Partner turnaround sets go-live" is downgraded from finding to operational hypothesis.</strong></li>
+    <li><strong>Change volume: high tempo, unknown origin</strong> <em>(implementation proxy only)</em> — 55 transformation-version deployments in the latest 7-day window; a deployment may be an internal fix, rollback, or one of several releases per partner notice, so no annualization may be quoted as "partner changes per year". Supports the change protocol; does not yet size it.</li>
+  </ul>
+  <p>And Atlas's ranking of production failure causes reads like a requirements list for the contract layer:</p>
+  <div class="tablewrap">
+    <table>
+      <tr><th>#</th><th>Failure cause (Atlas)</th><th>Contract feature that kills it</th></tr>
+      <tr><td class="pa">1</td><td>Master-data drift — GLNs, ship-to/bill-to, product IDs, VAT data, pack sizes change after go-live</td><td>Master-data preconditions declared and checkable in-contract ("prices match PRICAT digest ≥ X")</td></tr>
+      <tr><td class="pa">2</td><td>Silent partner requirement changes — rules, mandatory fields, conventions changed without notice</td><td>Versioned change protocol: new digest, computed diff, overlap windows, capability ACKs</td></tr>
+      <tr><td class="pa">3</td><td>Untested scenarios — returns, credit notes, partial deliveries, variable weight, Pfand, mixed VAT</td><td>Scenario rules (CEL) + mandatory test vectors per scenario; conformance is computed, not sampled</td></tr>
+      <tr><td class="pa">4</td><td>Code-list and reference-data changes</td><td>Registry-versioned code lists</td></tr>
+      <tr><td class="pa">5</td><td>Mapping assumptions that held only for test samples</td><td>Compile-from-contract with the contract's own oracle, not inference from instances</td></tr>
+      <tr><td class="pa">6</td><td>Operational drift — credentials, certificates, endpoints</td><td>Signed connectivity capability updates with effective dates</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="no">§ 5</span>The version that survives: self-describing by reference</h2>
+  <p>One artifact class carries the whole vision. A <strong>Trade Contract</strong> is a versioned, signed, content-addressed bundle published per receiver-profile (the dictating side authors it, as with OpenAPI; Procuros authors on behalf of the long tail):</p>
+  <ol>
+    <li><strong>Shape</strong> — JSON Schema.</li>
+    <li><strong>Semantics</strong> — per-field URIs into a registry reusing EN 16931 business terms (BT-1…BT-161), UN/CEFACT CCL, GS1 code lists. Zero invented meanings.</li>
+    <li><strong>Rules</strong> — CEL: <code>has(msg.batch) ? msg.bestBefore != null : true</code>, cross-field arithmetic, master-data preconditions. EN 16931's ~983 executable rules prove requirements-as-code works across thousands of implementers.</li>
+    <li><strong>Response declarations</strong> — allowed next documents, correlation keys, echo bindings as source-pointer→target-field expressions (OpenAPI Links precedent), typed holes for genuine business decisions (accept / reject / partial / substitute, enumerated codes), deadlines (RosettaNet precedent). Mechanical parts compile; decisions stay human/ERP.</li>
+    <li><strong>Connectivity</strong> — signed transport capability (AS2, SFTP, AS4/PEPPOL, API, mail), registry-resolved, updated only by signed versions.</li>
+    <li><strong>Test vectors</strong> — valid and invalid instances with expected clause-level errors. The contract is its own test oracle.</li>
+    <li><strong>Legacy projection</strong> — bindings to EDIFACT segment positions, from which the human-readable MIG <em>and the wire translator are generated</em>. The PDF dies as an authoring format and survives as documentation output.</li>
+  </ol>
+  <p>Every message carries <code>contract: sha256:…</code>; first contact may inline the bundle — the TLS-handshake pattern. The runtime stays minimalist <em>because</em> the contract carries the complexity: resolve, verify, validate, project, respond. That runtime, distributed through ERP app stores, is the product form of "minimalist software that handles everything between parties."</p>
+  <div class="callout">
+    <p class="k">Go-live without partner-in-the-loop testing</p>
+    <p>Receiver publishes contract → sender's toolchain (LLM-assisted) compiles the ERP binding, iterating until the contract's validators and test vectors pass → a neutral hosted conformance service returns clause-level verdicts and a signed attestation → effective date. <strong>The partner leaves the critical path</strong> — the thing that actually sets go-live dates today. No dueling rule sets: both sides validate against the same published artifact.</p>
+  </div>
+  <p><strong>Change protocol:</strong> v2 = new digest + machine-computed structural diff + <em>declared</em> semantic-change annotations (structural diffing cannot classify a meaning shift with unchanged shape — the one place human review remains), mandatory overlap windows, cutover gated on signed capability-ACKs. Silent breaking changes become protocol violations. <strong>Enrichment and rejection:</strong> structured messages citing contract clause IDs; an enrichment ask is formally a contract change proposal. Runtime-native, or it dies APERAK's death. <strong>Bootstrap:</strong> Procuros' live JSONata mappings parse to ASTs — field paths, conditionals, coercions, code-list translations mine into draft contracts, back-tested against message history. No competitor and no standards body has that corpus. (Generate synthetic test vectors from schemas and rules; real prices and volumes in vectors are a GDPR/confidentiality landmine.)</p>
+
+  <h2><span class="no">§ 6</span>Adoption physics</h2>
+  <p>No B2B message standard has ever spread by spontaneous bilateral adoption. Walmart's 2002 AS2 mandate was a transport swap that cut Walmart's own VAN costs. Amazon still requires classic EDI for core Vendor Central flows. Tradacoms — frozen 1995, unsupported since 2017 — still runs at major UK retailers. The fast resets were all legal mandates (Italy 2019, Mexico 2014, Belgium 2026), and they reset one regulated document. Chargebacks partially function as retailer profit centers, so "fewer disputes" pitched at retailer finance can be a <em>negative</em> — pitch supply-chain and merchandising owners on what the giant itself bleeds: long-tail onboarding speed, dropship expansion, master-data quality, empty shelves.</p>
+  <ol>
+    <li><strong>Unilateral adoption via the bridge</strong> — contracts compile to each partner's EDIFACT/X12/Tradacoms guide; Procuros operates the bridge; the legacy side never knows. Any design requiring simultaneous bilateral adoption is dead on arrival.</li>
+    <li><strong>Seed from the live network</strong> — the format as an alternative serialization of Procuros' canonical flows; every existing customer is a day-one endpoint.</li>
+    <li><strong>Open spec + free hosted conformance validator</strong>; ERP app-store runtimes as distribution.</li>
+    <li><strong>Ride the 2026–2030 mandate wave</strong> as compliance-adjacent tooling; home turf is unregulated order-to-cash.</li>
+    <li><strong>Giants come last</strong>, pulled by their own cost lines once the long tail speaks the language.</li>
+  </ol>
+  <p>Governance honesty: a Procuros-owned "open" format caps out at a walled garden (cXML/Ariba precedent). Open-source the spec and validators early; court GS1/UN-CEFACT for the semantic layer; keep the corpus and conformance service as the commercial edge. A central registry concentrates blast radius — versioned pinning, staged rollout, and rollback are launch features.</p>
+
+  <h2><span class="no">§ 7</span>The two bets that decide it — and Phase&nbsp;0</h2>
+  <div class="callout">
+    <p class="k">Phase 0 — contracts before wire format</p>
+    <p>The practical first move is <strong>not</strong> to invent a new wire format. Build an internal, versioned contract representation for a small set of existing high-friction retail flows; generate validators, test vectors, readable guides, and EDIFACT projections from it; run it beside the current mapping/PDF process and compare silent-error rates and onboarding cycle time. This tests the real thesis with zero ecosystem adoption required — and it <em>is</em> the experimental apparatus for both bets below. Pick flows by friction: frequent post-go-live failures, recent silent partner changes, scenario-heavy domains (fresh food, Pfand, variable weight).</p>
+  </div>
+  <div class="bets">
+    <div class="bet">
+      <h4>Bet 1 — LLM compilation-with-tests works at finance grade</h4>
+      <p>The entire "why now, not 2001" argument: ebXML failed because binding formal agreements to heterogeneous ERPs stayed artisanal; the claim is that LLMs collapse that cost <em>when the contract supplies the test oracle</em>. Currently an untested hypothesis — no benchmark or pilot anywhere quantifies auto-binding accuracy, and schema-matching research plateaued below finance grade without executable oracles.</p>
+      <p class="exp"><b>Experiment:</b> reconstruct contracts from 10 completed onboardings via the JSONata corpus, auto-compile bindings, measure pass rates against held-out production traffic — and the <b>silent-wrong rate</b>, not just the caught-error rate.</p>
+    </div>
+    <div class="bet">
+      <h4>Bet 2 — the counterfactual is beaten</h4>
+      <p>If LLM mapping works, incumbents point it at legacy PDFs and EDIFACT samples with no new format. The defense: a binding compiled against a signed executable contract with test vectors is <em>provable</em>; an LLM reading a PDF MIG is <em>plausible</em>. In money flows, provable vs plausible is the product — if contracts don't measurably beat PDF-fed AI mapping on silent-error rates, the format has no moat.</p>
+      <p class="exp"><b>Experiment:</b> same study, two arms — contract-oracle compilation vs PDF-fed mapping — compared on silent-error rate.</p>
+    </div>
+  </div>
+  <p>And one bet you don't control: whether the dictating side will publish. Retail already has single-side dictation (the MIG); OpenAPI's success conditions are satisfiable if retailers publish executable contracts. The bridge means you don't need them to start — the endgame is an incentive problem, and should be priced as one.</p>
+
+  <h2><span class="no">§ 8</span>Disposition of the original vision</h2>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Original feature</th><th>Verdict</th><th>Surviving form</th></tr>
+      <tr><td>Message carries schema / semantics / rules</td><td><span class="pill keep">KEEP</span></td><td>By reference: <code>contract: sha256:…</code> in every message; first contact may inline. Observationally identical to "the message is the config file".</td></tr>
+      <tr><td>Build the map from one received message</td><td><span class="pill drop">DROP</span></td><td>Underdetermined and silently wrong. Replaced by compile-from-contract with test vectors as oracle.</td></tr>
+      <tr><td>Scenario conditionality (X present → Y mandatory)</td><td><span class="pill keep">KEEP</span></td><td>CEL rules in-contract. The enforcement is new; expressibility never was (SEF had it in the '90s).</td></tr>
+      <tr><td>Messages declare how to build responses</td><td><span class="pill keep">KEEP</span></td><td>Strongest feature. Echo bindings + typed decision holes + deadlines; RosettaNet and OpenAPI Links precedents.</td></tr>
+      <tr><td>In-band change / enrichment requests</td><td><span class="pill keep">KEEP</span></td><td>Signed contract-version proposals citing clause IDs; never auto-applied (BEC vector); runtime-native.</td></tr>
+      <tr><td>Live config changes in-band</td><td><span class="pill reshape">RESHAPE</span></td><td>Signed capability updates with effective dates, policy-gated application.</td></tr>
+      <tr><td>Connectivity details in the message</td><td><span class="pill reshape">RESHAPE</span></td><td>Signed connectivity section, registry-resolved (SMP precedent); bootstrap needs an out-of-band anchor by construction.</td></tr>
+      <tr><td>No EDI testing</td><td><span class="pill reshape">RESHAPE</span></td><td>No <em>partner-in-the-loop</em> testing; conformance becomes a compile step + neutral attestation.</td></tr>
+      <tr><td>Replace guidelines / format guides entirely</td><td><span class="pill keep">KEEP</span></td><td>The MIG PDF is <em>generated</em> from the contract projection — dead as an authoring format.</td></tr>
+      <tr><td>No normalization / denormalization</td><td><span class="pill reshape">RESHAPE</span></td><td>No <em>hand-written</em> normalization; projections generated; canonical semantics survive as registry.</td></tr>
+      <tr><td>Minimalist runtime</td><td><span class="pill keep">KEEP</span></td><td>Resolve → verify → validate → project → respond. ERP app-store distribution; the wedge.</td></tr>
+      <tr><td>P2P, hub-less</td><td><span class="pill reshape">RESHAPE</span></td><td>P2P wire, shared semantic registry. Pure pairwise contracts are O(N²) — EDI's disease restated.</td></tr>
+      <tr><td>Giants adopt because it's better</td><td><span class="pill drop">DROP</span></td><td>They never have. Unilateral adoption + their own cost lines + mandate-wave timing.</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="no">§ 9</span>Measurement agenda and open questions</h2>
+  <p>The evidence review answered the original internal questions as far as current data allows and converted the rest into instrumentation work. Before sizing assumptions drive investment decisions, build:</p>
+  <ul>
+    <li><strong>Requirement-source classification</strong>, per relationship × document type: executable specification / partner guide / internal implementation / master-data-or-commercial attachment / undocumented operational knowledge (one requirement may have several sources). The baseline for "what share is tribal" and for what contract-ification actually converts.</li>
+    <li><strong>Onboarding milestone instrumentation</strong>: request opened → requirements complete → configuration ready → first test sent → partner approval → go-live. Yields median/P75 and the external sign-off share — the number that confirms or kills the partner-turnaround hypothesis.</li>
+    <li><strong>Failure taxonomy</strong> separating certificate/auth/endpoint/file-convention issues from mapping, validation, master-data, and partner-side failures — makes the connectivity-vs-semantics split measurable.</li>
+    <li><strong>A change ledger</strong> recording origin (partner / regulation / internal / defect), affected relationship and flow, semantic vs technical impact, effective date, and a shared identifier linking one external notice to its several releases — sizes governed change control, which raw deployment counts cannot.</li>
+  </ul>
+  <h3>Design</h3>
+  <ul>
+    <li>Registry governance and the neutrality handoff path (when the semantic layer goes to GS1/UN-CEFACT); who pays for registry operations.</li>
+    <li>Liability: who bears the loss when a generated projection mispays; the evidentiary role of the signed contract.</li>
+    <li>How much human review the change protocol genuinely requires — structural diffs compute; meaning shifts don't.</li>
+    <li>Who authors contracts where the dictating side is a CSV-and-email SME (today: Procuros; at scale: open).</li>
+  </ul>
+
+  <p class="foot">Method: five research lenses (prior art · PEPPOL/regulation · adversarial · steelman architecture · adoption economics) plus a response-choreography lens, each claim adversarially fact-checked by dedicated verification agents against primary or independent sources, then a completeness critique; internal figures from Atlas are directional estimates, and § 4's operational evidence review (Aug 2026) — labelling each internal claim verified / inferred / not-measured — is the authority where they differ. Corrected figures are reflected throughout (EN 16931: 161 business terms, ~983/~808 rules per syntax; France ~147 certified platforms as of Aug 2026; Tradacoms persistence stated qualitatively). Full text with sources: <code>ASSESSMENT.md</code> on <code>claude/edi-adoption-stats-cok780</code> in <code>encefalopiatto/nomoreEDI</code>.</p>
+</div>

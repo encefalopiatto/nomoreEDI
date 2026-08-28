@@ -1,0 +1,148 @@
+# PEPPOL and the EU e-invoicing regulatory wave
+
+*Research lens `peppol-regulation` — structured output of the research agent, followed by adversarial fact-check verdicts. Confidence labels are the agent's own; verdicts are from an independent verification agent with web access.*
+
+## Summary
+
+PEPPOL is the strongest existing counter-example to "self-describing messages" as the cure for bilateral testing — it eliminated bilateral testing by the opposite mechanism: removing degrees of freedom. One fixed semantic model (EN 16931), one BIS profile, centrally published machine-executable Schematron validators (CEN + OpenPeppol layers), certified Access Points, and DNS-based discovery (SML→SMP) where each receiver's supported document types, endpoint and certificate are published machine-readably. Conformance = passing published validators; "connect once, reach all" replaces per-partner mapping/testing. Vendor-reported onboarding: same-day partner activation vs multi-week EDI projects; setup ~$5-15k vs $20-50k VAN EDI — directionally credible but no independent academic study found. Yet variance crept back through governance-sanctioned channels: country CIUS layers (XRechnung with mandatory Leitweg-ID BT-10, per-Bundesland platform differences), 955+ validation rules stacked across EN/PEPPOL/CIUS layers, and PINT jurisdictional specializations — variance was formalized, not abolished, and buyer-specific supplier guides persist informally. Regulatory wave (all dates verified): Italy SDI clearance since 1 Jan 2019 (~€2-4bn VAT uplift claims); Germany receive-obligation 1 Jan 2025, issuance 1 Jan 2027 (turnover >€800k) and 1 Jan 2028 (all); Belgium structured Peppol B2B from 1 Jan 2026 (tolerance ended 31 Mar 2026), 5-corner e-reporting ~2028; France receive-all + issue (large/mid) 1 Sept 2026, SMEs 1 Sept 2027, via certified PDPs/PAs — EDIFACT survives only between consenting PAs; ViDA adopted 11 Mar 2025, intra-EU B2B digital reporting mandatory 1 July 2030, domestic-system harmonization by 1 Jan 2035; EN 16931 revised for B2B/ViDA (CEN approvals Oct 2025/Feb 2026). Verdict on the window: 2026-2030 is a genuine once-in-a-generation re-plumbing of European invoicing, but the format slot is already legally awarded to EN 16931 syntaxes (UBL/CII/Factur-X) on Peppol/PDP rails; a novel language cannot carry a legally valid DE/FR/BE invoice without conversion. The open space is unregulated order-to-cash (ORDERS, DESADV, ORDRSP) — exactly where retail/CPG EDI lives — but there the regulatory tailwind is absent, and Peppol's Logistics/Ordering BIS profiles are expanding into it.
+
+## Key points
+
+### 1. PEPPOL eliminates bilateral testing via one fixed schema plus centrally published machine-executable validators: EN 16931 Schematron (CEN) layered with Peppol BIS Schematron (OpenPeppol), bundled and versioned at docs.peppol.eu. Conformance means passing the published validators — no per-partner test phase exists.
+
+- **Relevance:** Proves computed conformance works at scale — but through central governance of one schema, not per-message self-description.
+- **Evidence:** OpenPeppol publishes XSD + Schematron artifacts with each BIS Billing 3.0 release; documents must pass both EN 16931 and Peppol rulesets; CEN's EN rules are bundled in the same artifacts.
+- **Confidence:** `verified-web`
+- **Source:** https://docs.peppol.eu/poacc/billing/3.0/bis/; https://ionite.net/news-articles/2023-08-17_validating_peppol_documents/
+
+### 2. Peppol's 4-corner model already provides machine-readable partner-capability discovery: sender's Access Point queries SML (DNS) to locate the receiver's SMP, which returns supported document types, processes, endpoint URL and certificate. Receiver capabilities are published, not negotiated in-band.
+
+- **Relevance:** The proposal's 'receiver learns sender's format from the message' inverts a proven pattern: capabilities published centrally before sending, keeping messages themselves fixed-format.
+- **Evidence:** SML/SMP lookup chain documented by OpenPeppol interoperability framework and e-rechnung-bund.de.
+- **Confidence:** `verified-web`
+- **Source:** https://peppol.org/learn-more/peppol-interoperability-framework/; https://e-rechnung-bund.de/en/faq/peppols-technical-solution-the-four-corner-model/
+
+### 3. Onboarding evidence: once registered on Peppol, adding a trading partner is claimed same-day with no format mapping, testing, or bilateral agreement; setup ~$5,000-15,000 vs $20,000-50,000 for VAN-based EDI, no per-partner fees. Evidence is vendor-published, not peer-reviewed.
+
+- **Relevance:** Directionally supports the thesis that removing bilateral testing cuts onboarding by an order of magnitude — but the mechanism was standardization, not self-description.
+- **Evidence:** TradeCentric and Acume comparisons; no independent academic study of Peppol vs bilateral-EDI onboarding cost was found.
+- **Confidence:** `verified-web`
+- **Source:** https://tradecentric.com/blog/peppol-vs-traditional-edi/; https://acumelimited.com/edi-van-vs-peppol-einvoicing/
+
+### 4. Partner-specific variance crept back through sanctioned channels: country CIUS layers tighten EN 16931 (mandatory fields, restricted code lists); total rules exceed 955 across EN/Peppol/CIUS layers; Germany's XRechnung CIUS adds mandatory Leitweg-ID (BT-10) with per-Bundesland platforms and timelines.
+
+- **Relevance:** Even with maximal central governance, buyers/jurisdictions re-introduce variance. A language permitting per-message schema negotiation would amplify, not suppress, this force.
+- **Evidence:** XRechnung mandates Leitweg-ID routing on every public-sector invoice; German states run different platforms (ZRE, OZG-RE) and rules; invoicenavigator counts 955+ rules across layers.
+- **Confidence:** `verified-web`
+- **Source:** https://www.invoicenavigator.eu/blog/en16931-validation-rules-complete-guide; https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467108886/eInvoicing+in+Germany
+
+### 5. ViDA adopted by EU Council 11 March 2025: digital reporting via structured e-invoicing mandatory for intra-EU B2B transactions from 1 July 2030; pre-2024 domestic systems (Italy, France, Poland...) must harmonize to the EU standard by 1 January 2035; member states may mandate domestic B2B e-invoicing without derogation since 2025.
+
+- **Relevance:** Fixes the 2030-2035 endgame: EU-wide structured invoicing on EN 16931 semantics — the semantic core is legislatively locked, not up for grabs.
+- **Evidence:** Council adoption 11 Mar 2025; DRR 1 Jul 2030; harmonization 1 Jan 2035 per Sovos/Marosa/EDICOM timelines.
+- **Confidence:** `verified-web`
+- **Source:** https://sovos.com/blog/vat/vida-timeline/; https://marosavat.com/vat-news/vat-in-the-digital-age
+
+### 6. France: all companies must receive e-invoices from 1 September 2026; large and intermediate firms must issue from 1 September 2026; SMEs/micro from 1 September 2027. Exchange only via certified platforms (PDP/PA, ~101 certified); UBL/CII/Factur-X core formats; EDIFACT permitted only between consenting PAs.
+
+- **Relevance:** France's mandate legally prescribes formats and intermediaries — and notably preserves an EDIFACT channel, meaning mandates alone don't kill classic EDI.
+- **Evidence:** Marosa, TrueCommerce, EDICOM mandate guides; KPMG on the CTC model.
+- **Confidence:** `verified-web`
+- **Source:** https://marosavat.com/vat-news/e-invoicing-france; https://edicomgroup.com/blog/status-of-b2b-electronic-invoicing-in-france
+
+### 7. Germany (Wachstumschancengesetz, Bundesrat 22 March 2024): all businesses must be able to receive EN 16931 e-invoices for domestic B2B since 1 January 2025; issuance mandatory 1 January 2027 for turnover above €800,000 and 1 January 2028 for all businesses.
+
+- **Relevance:** Procuros' home market: every German trading partner is re-plumbing invoicing 2025-2028 — maximum receptivity window for infrastructure pitches, but format is prescribed (XRechnung/ZUGFeRD, EN 16931).
+- **Evidence:** EDICOM, Marosa, ecosio, Avalara compliance guides all confirm the 2025/2027/2028 phasing and €800k threshold.
+- **Confidence:** `verified-web`
+- **Source:** https://edicomgroup.com/blog/germany-b2b-electronic-invoice; https://marosavat.com/vat-news/german-e-invoicing-guide
+
+### 8. Belgium mandates structured B2B invoices over the Peppol 4-corner network (EN 16931 UBL/CII) from 1 January 2026, tolerance ended 31 March 2026, with near-real-time 5-corner e-reporting planned ~2028. Italy's SDI clearance model has covered B2B/B2C since 1 January 2019.
+
+- **Relevance:** Belgium proves a state can mandate Peppol itself as the network; Italy proves clearance models entrench a national format for 15+ years once installed — first-mover formats become sticky by law.
+- **Evidence:** Belgian mandate and tolerance per fiskaly/Marosa/Tradeshift; Italy: 97% of invoices cleared without problems H1-2019, VAT uplift estimates €2-4bn (Avalara, Grant Thornton).
+- **Confidence:** `verified-web`
+- **Source:** https://www.fiskaly.com/blog/belgium-b2b-e-invoicing-mandate-2026-peppol; https://www.avalara.com/vatlive/en/vat-news/italy-sdi-vat-e-invoicing-raises--4bn.html
+
+### 9. EN 16931 (2017, originally B2G) was revised for B2B/ViDA: CEN approved the revised semantic model late October 2025 with further updates approved 13 February 2026, adding IBAN, triangulation, corrective-invoice sequencing, margin schemes — mandated basis for intra-EU reporting from July 2030.
+
+- **Relevance:** The EU is actively investing in EN 16931 as the single semantic core; a competing semantic model launched now fights a standard being freshly re-entrenched, not a decaying one.
+- **Evidence:** VATupdate reports CEN approval 23 Oct 2025; vatcalc reports 13 Feb 2026 update approval.
+- **Confidence:** `verified-web`
+- **Source:** https://www.vatupdate.com/2025/10/31/european-e-invoicing-standard-en-16931-approved-oct-23-2025/; https://www.vatcalc.com/eu/eu-updates-en-16931-e-invoicing-standard-for-vida/
+
+### 10. Peppol scale as of 2025: ~1.4-2 million registered receiving organizations across ~98 countries, 300+ certified Access Points, 6M+ documents/month; growth 1,173% since 2019; expanding beyond Europe (Singapore, Malaysia, Japan PINT, UAE, Nigeria as first African Peppol Authority 2025).
+
+- **Relevance:** Any new peer-to-peer language competes with an installed, regulator-endorsed network at multi-million-endpoint scale that already offers near-zero-cost partner activation.
+- **Evidence:** peppol.nu statistics and Qvalia country guide, October 2025 figures.
+- **Confidence:** `verified-web`
+- **Source:** https://www.peppol.nu/knowledge-base/peppol-statistics/; https://qvalia.com/peppol-global-reach-2026-the-complete-country-guide/
+
+### 11. Design lesson contradicting the proposal's core premise: Peppol abolished bilateral testing by eliminating schema negotiation — fixed semantics, central validator publication, certified transport, and a governance framework banning bilateral deviations. Self-describing per-message schemas reintroduce exactly the per-partner variability this architecture suppressed; validation artifacts, not schemas-in-band, were the breakthrough.
+
+- **Relevance:** Directly challenges the 'radically self-describing message' thesis: the proven cure for bilateral testing is fewer degrees of freedom plus computable conformance, not richer per-message metadata.
+- **Evidence:** Peppol BIS forbids partner-specific profile changes; conformance is against published artifacts; variance that survived (CIUS, PINT specializations) is centrally registered, versioned and validator-backed rather than negotiated pairwise.
+- **Confidence:** `model-knowledge`
+
+### 12. Window verdict: 2026-2030 is a real once-in-a-generation reset — every EU business touches invoicing infrastructure — but the invoice format slot is legally pre-awarded to EN 16931 syntaxes on Peppol/PDP rails. The open space is unregulated retail order-to-cash (ORDERS, ORDRSP, DESADV/SSCC, PRICAT), where mandates give no tailwind and Peppol's Ordering/Logistics BIS profiles are only beginning to encroach.
+
+- **Relevance:** Strategic framing for the proposal: ride the mandate wave as an EN 16931-compatible layer, or target unregulated O2C flows where incumbency (GS1/EDIFACT) rather than law is the barrier — but not both with one new syntax.
+- **Evidence:** DE/FR/BE mandates each prescribe EN 16931-compliant formats and certified channels; a non-compliant syntax cannot carry a legally valid domestic invoice there without conversion; retail O2C messages remain EDIFACT/GS1-governed and unmandated.
+- **Confidence:** `model-knowledge`
+
+## Verification verdicts
+
+### `CONFIRMED` — PEPPOL eliminates bilateral testing via one fixed schema plus centrally published validators (EN 16931 Schematron + Peppol BIS Schematron at docs.peppol.eu); conformance = passing published validators, no per-partner test phase
+
+Official BIS Billing 3.0 XSD + Schematron artifacts are published/versioned at docs.peppol.eu; CEN's EN 16931 schematron rules (currently v1.3.11) are bundled with Peppol rules in the same artifact package. Peppol's framework has no mandated per-partner test phase ('connect once, connect to all').
+
+*Sources: https://docs.peppol.eu/poacc/billing/3.0/release-notes/; https://www.invoicenavigator.eu/glossary/peppol-bis-billing-3-0; https://peppol.org/learn-more/peppol-interoperability-framework/*
+
+### `CONFIRMED` — Peppol 4-corner model provides machine-readable capability discovery: sender AP queries SML (DNS) to find receiver's SMP, which returns supported document types, processes, endpoint URL and certificate; capabilities are published, not negotiated in-band
+
+SML maps participant IDs to SMP URLs via DNS (hashed participant ID, NAPTR records); the SMP publishes supported document types, processes, AP endpoint URL, and the AP's public-key certificate. Matches OpenPeppol interoperability framework documentation.
+
+*Sources: https://peppol.org/learn-more/peppol-interoperability-framework/; https://peppol.helger.com/public/locale-en_US/menuitem-docs-doc-exchange*
+
+### `CORRECTED` — Onboarding evidence: adding a Peppol trading partner claimed same-day with no mapping/testing/bilateral agreement; setup ~$5,000-15,000 vs $20,000-50,000 for VAN EDI, no per-partner fees; vendor-published evidence
+
+Acume page contains the exact dollar ranges but tied to volume tiers; TradeCentric page has no cost figures at all, so the claim's dual attribution is wrong. 'Same-day' overstates the vendor's 'hours to days'. Vendor-published caveat is accurate.
+
+**Correction:** Dollar figures come from Acume only (not TradeCentric): $5,000-15,000 Peppol vs $20,000-50,000 EDI VAN at a 500 invoices/month volume band (EDI rises to $20,000-80,000+ at 2,000/month). Acume claims partner onboarding in 'hours to days' with 'no additional setup', not literally same-day; TradeCentric gives no dollar figures and cites 2-8 weeks initial Peppol setup vs 3-6 months per major EDI partner.
+
+*Sources: https://acumelimited.com/edi-van-vs-peppol-einvoicing/; https://tradecentric.com/blog/peppol-vs-traditional-edi/*
+
+### `CORRECTED` — Variance via sanctioned channels: country CIUS layers tighten EN 16931; total rules exceed 955 across EN/Peppol/CIUS layers; XRechnung adds mandatory Leitweg-ID (BT-10) with per-Bundesland platforms and timelines; German states run different platforms (ZRE, OZG-RE)
+
+The claim text itself is essentially right; the supporting evidence mislabels ZRE/OZG-RE as state platforms. Both are federal; per-Bundesland variance comes from separate Länder portals and E-Rechnung regulations. 955-rule count is a single vendor's tally (invoicenavigator.eu), not an official figure.
+
+**Correction:** Core confirmed: 955+ rules across layers (Invoice Navigator), CIUS layers tighten EN 16931, Leitweg-ID in BT-10 is mandatory on XRechnung public-sector invoices and invoices without it are rejected, and Bundesländer do have divergent platforms/timelines. But ZRE and OZG-RE are FEDERAL platforms, not state ones — and ZRE was discontinued end-2025 (federal invoices now via OZG-RE); states run their own separate portals.
+
+*Sources: https://www.invoicenavigator.eu/blog/en16931-validation-rules-complete-guide; https://e-rechnung-bund.de/en/faq/what-is-a-buyer-reference/; https://www.baseinvoice.eu/en/learn/leitweg-id*
+
+### `CONFIRMED` — ViDA adopted by EU Council 11 March 2025; structured e-invoicing/digital reporting mandatory for intra-EU B2B from 1 July 2030; pre-2024 domestic systems must harmonize by 1 January 2035; member states may mandate domestic B2B e-invoicing without derogation since 2025
+
+Council adopted ViDA 11 Mar 2025 (OJ 25 Mar 2025, in force April 2025). Intra-EU B2B e-invoicing + near-real-time DRR from 1 Jul 2030. Member states with domestic systems in place/authorized before 1 Jan 2024 (Italy, France, Poland qualify via pre-2024 derogations) must harmonize by 1 Jan 2035. Derogation requirement removed upon entry into force in 2025.
+
+*Sources: https://www.nortonrosefulbright.com/en/knowledge/publications/7f7569e5/vat-in-the-digital-age-vida-package-finally-adopted; https://www.vatcalc.com/eu/eu-2028-digital-reporting-requirements-drr-e-invoice/; https://taxation-customs.ec.europa.eu/taxation/vat/vat-digital-age-vida_en*
+
+### `CORRECTED` — France: all companies must receive e-invoices from 1 Sept 2026; large/intermediate issue from 1 Sept 2026; SMEs/micro from 1 Sept 2027; exchange only via certified platforms (PDP/PA, ~101 certified); UBL/CII/Factur-X core formats; EDIFACT only between consenting platforms
+
+Receive obligation 1 Sep 2026 for all; issuance 1 Sep 2026 (large/mid) and 1 Sep 2027 (SME/micro); all flows via Plateformes Agréées (ex-PDP). '~101' was accurate only in January 2026 — count now ~147.
+
+**Correction:** Dates, platform requirement, and formats confirmed. But the platform count is stale: 101 was the FIRST official DGFiP list published 16 January 2026; by April 2026 ~127 had final registration and as of August 2026 there are ~147 Plateformes Agréées. EDIFACT is supported as an interoperability format between platforms by mutual agreement, alongside core UBL/CII/Factur-X.
+
+*Sources: https://www.truecommerce.com/en-gb/blog/e-invoicing-in-france-a-guide-to-the-french-mandate/; https://comparateur-efacturation.fr/guide/liste-plateformes-agreees; https://www.avalara.com/blog/en/europe/2026/07/french-e-invoicing-mandate-readiness.html*
+
+### `CONFIRMED` — Germany (Wachstumschancengesetz, Bundesrat 22 March 2024): all businesses must be able to receive EN 16931 e-invoices for domestic B2B since 1 Jan 2025; issuance mandatory 1 Jan 2027 for turnover >€800,000 and 1 Jan 2028 for all
+
+Bundesrat approved the Wachstumschancengesetz on 22 March 2024. Receipt capability mandatory since 1 Jan 2025; issuance from 1 Jan 2027 for businesses with prior-year turnover above €800,000; from 1 Jan 2028 for all. EN 16931-conformant formats (XRechnung, ZUGFeRD) prescribed.
+
+*Sources: https://edicomgroup.com/blog/germany-b2b-electronic-invoice; https://marosavat.com/vat-news/german-e-invoicing-guide; https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467108886/eInvoicing+in+Germany*
+
+### `CONFIRMED` — Belgium mandates structured B2B invoices over Peppol (EN 16931) from 1 Jan 2026, tolerance ended 31 March 2026, 5-corner e-reporting ~2028; Italy's SDI has covered B2B/B2C since 1 Jan 2019 (97% cleared H1-2019, VAT uplift €2-4bn)
+
+Belgium: mandate live 1 Jan 2026 via Peppol/EN 16931; tolerance window 1 Jan-31 Mar 2026, penalties (€1,500/€3,000/€5,000 graduated) enforced from 1 Apr 2026; near-real-time 5-corner e-reporting planned Jan 2028. Italy: SdI B2B/B2C since 1 Jan 2019; 97% of 890m invoices cleared without problems H1-2019; 2019 uplift €4bn actual vs ~€2bn forecast — consistent with the €2-4bn range.
+
+*Sources: https://tradeshift.com/resources/compliance/belgium-b2b-e-invoicing-mandate-2026-tolerance-period/; https://edicomgroup.com/blog/belgium-will-make-b2b-electronic-invoice-mandatory; https://www.avalara.com/vatlive/en/vat-news/italy-sdi-vat-e-invoicing-raises--4bn.html*
+
