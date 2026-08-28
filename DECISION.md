@@ -124,7 +124,7 @@ That last part matters most: because the rulebook contains examples with known r
 
 **4. The changelog.** When requirements change, a version 2 of the rulebook is published. Everyone connected is notified automatically, there is a transition period where both versions are accepted, and a dashboard shows who has switched and who hasn't. Silent changes — today's second-biggest cause of production failures — stop being possible.
 
-And only after all that is proven: a new message format where every message simply says "I follow rulebook #12345, version 3," and a small piece of software at each company reads the rulebook and handles the rest. That is the endgame — but it only makes sense once the rulebooks exist and have earned trust.
+And only after all that is proven: a new message format where every message simply says "I follow rulebook #12345, version 3," and a small piece of software at each company reads the rulebook and handles the rest. That is the endgame — but it only makes sense once the rulebooks exist and have earned trust. The format itself is already specified in draft as the **supermessage** — see [SUPERMESSAGE.md](SUPERMESSAGE.md): specifying the traveling form early costs little and sharpens the rulebook design; *shipping* it still comes last.
 
 ### What the software would look like
 

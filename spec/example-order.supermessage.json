@@ -1,0 +1,274 @@
+{
+  "supermessage_version": "0.1",
+  "_comment": "Complete worked example: a fresh-food order sent by a (fictional) retailer to a (fictional) dairy supplier. All names, identifiers, and keys are invented. Signatures are illustrative placeholders, not real cryptography.",
+
+  "about": {
+    "message_type": "order",
+    "message_number": "ORD-2026-88112",
+    "sent_at": "2026-08-28T09:15:00Z",
+    "sender": {
+      "name": "Nordkauf Handels GmbH (fictional)",
+      "company_id": "GLN 4099999000015"
+    },
+    "receiver": {
+      "name": "Molkerei Weide GmbH (fictional)",
+      "company_id": "GLN 4088888000023"
+    },
+    "follows_rulebook": {
+      "id": "nordkauf.order.fresh-food",
+      "version": 3,
+      "fingerprint": "sm0-EXAMPLE-FINGERPRINT-a1b2c3",
+      "included_below": true
+    },
+    "signature": {
+      "signed_by": "Nordkauf Handels GmbH (fictional)",
+      "method": "placeholder-for-illustration",
+      "value": "SIG-EXAMPLE-ONLY"
+    }
+  },
+
+  "content": {
+    "order_number": "ORD-2026-88112",
+    "order_date": "2026-08-28",
+    "requested_delivery_date": "2026-09-01",
+    "deliver_to": {
+      "name": "Nordkauf regional warehouse North",
+      "company_id": "GLN 4099999000107"
+    },
+    "invoice_to": {
+      "name": "Nordkauf Handels GmbH central accounting",
+      "company_id": "GLN 4099999000039"
+    },
+    "price_list_reference": "PL-2026-09",
+    "lines": [
+      {
+        "line_number": 1,
+        "product_id": "GTIN 04088888100016",
+        "product_name": "Natural yogurt 500g cup",
+        "ordered_quantity": 1200,
+        "quantity_unit": "pieces",
+        "agreed_unit_price": { "amount": 0.62, "currency": "EUR" }
+      },
+      {
+        "line_number": 2,
+        "product_id": "GTIN 04088888200013",
+        "product_name": "Soft cheese wheel, variable weight",
+        "ordered_quantity": 80,
+        "quantity_unit": "pieces",
+        "pricing_note": "priced_by_weight",
+        "agreed_price_per_kg": { "amount": 7.9, "currency": "EUR" }
+      }
+    ]
+  },
+
+  "rulebook": {
+    "id": "nordkauf.order.fresh-food",
+    "version": 3,
+    "valid_from": "2026-07-01",
+    "published_by": "Nordkauf Handels GmbH (fictional)",
+    "publisher_signature": {
+      "method": "placeholder-for-illustration",
+      "value": "SIG-RULEBOOK-EXAMPLE-ONLY"
+    },
+    "fields": [
+      {
+        "field": "order_number",
+        "meaning": "The buyer's unique number for this order. Standard reference: the same thing EDIFACT calls BGM document number.",
+        "required": true,
+        "format": "text, max 35 characters"
+      },
+      {
+        "field": "requested_delivery_date",
+        "meaning": "The date goods must ARRIVE at the deliver_to address (not the ship date).",
+        "required": true,
+        "format": "calendar date"
+      },
+      {
+        "field": "deliver_to.company_id",
+        "meaning": "Identifies the warehouse that receives the goods. May differ from the ordering company and from invoice_to.",
+        "required": true,
+        "format": "GLN, 13 digits"
+      },
+      {
+        "field": "lines[].product_id",
+        "meaning": "The worldwide article number (GTIN) of the product.",
+        "required": true,
+        "format": "GTIN, 8/12/13/14 digits"
+      },
+      {
+        "field": "lines[].ordered_quantity",
+        "meaning": "How many units are ordered, in quantity_unit.",
+        "required": true,
+        "format": "whole number greater than zero"
+      }
+    ],
+    "rules": [
+      {
+        "rule": "R-01",
+        "plain_language": "Every order line must carry a product GTIN.",
+        "check": { "each": "lines", "condition": "product_id is present" },
+        "error_message": "Line {line_number}: product GTIN missing (rule R-01)."
+      },
+      {
+        "rule": "R-02",
+        "plain_language": "Ordered quantity must be greater than zero.",
+        "check": { "each": "lines", "condition": "ordered_quantity > 0" },
+        "error_message": "Line {line_number}: quantity must be greater than zero (rule R-02)."
+      },
+      {
+        "rule": "R-03",
+        "plain_language": "The order must reference the price list its prices come from.",
+        "check": { "condition": "price_list_reference is present" },
+        "error_message": "Price list reference missing (rule R-03)."
+      },
+      {
+        "rule": "R-04",
+        "plain_language": "Variable-weight products are ordered in pieces but priced per kilogram, so their lines must carry agreed_price_per_kg instead of agreed_unit_price.",
+        "check": { "each": "lines", "condition": "if pricing_note = priced_by_weight then agreed_price_per_kg is present and agreed_unit_price is absent" },
+        "error_message": "Line {line_number}: variable-weight line must use price per kg (rule R-04)."
+      },
+      {
+        "rule": "R-05",
+        "plain_language": "Both dairy products in this assortment are batch-tracked: the later despatch advice must state batch number and best-before date for every line. (Stated here so the supplier knows before shipping.)",
+        "applies_to": "despatch_advice",
+        "check": { "each": "lines", "condition": "batch_number is present and best_before_date is present" },
+        "error_message": "Line {line_number}: batch number and best-before date required for batch-tracked goods (rule R-05)."
+      }
+    ],
+    "scenarios": [
+      {
+        "scenario": "shortage",
+        "plain_language": "If the supplier cannot deliver the full quantity, the order response says 'change' on that line with the quantity it CAN deliver; it never simply omits the line."
+      },
+      {
+        "scenario": "substitution",
+        "plain_language": "Substitute products are not allowed in this assortment. A product that cannot be delivered is answered with 'reject' on that line."
+      }
+    ],
+    "code_lists": {
+      "quantity_unit": {
+        "pieces": "individual sales units",
+        "cases": "supplier case as registered in the article master"
+      },
+      "line_decision": {
+        "accept": "line will be delivered exactly as ordered",
+        "change": "line will be delivered with the stated changed quantity or date",
+        "reject": "line will not be delivered"
+      }
+    }
+  },
+
+  "how_to_respond": {
+    "allowed_responses": [
+      {
+        "response_type": "order_response",
+        "deadline": "within 48 hours of receiving this order",
+        "must_copy": [
+          { "from": "content.order_number", "to": "order_reference", "note": "echo the order number unchanged" },
+          { "from": "content.lines[].line_number", "to": "lines[].line_number", "note": "keep the buyer's line numbers" }
+        ],
+        "you_fill_in": [
+          { "field": "lines[].decision", "allowed_values_from": "code_lists.line_decision" },
+          { "field": "lines[].confirmed_quantity", "note": "required when decision is 'change'" },
+          { "field": "confirmed_delivery_date" }
+        ]
+      },
+      {
+        "response_type": "despatch_advice",
+        "deadline": "no later than goods departure",
+        "must_copy": [
+          { "from": "content.order_number", "to": "order_reference" },
+          { "from": "content.lines[].line_number", "to": "lines[].line_number" }
+        ],
+        "you_fill_in": [
+          { "field": "lines[].delivered_quantity" },
+          { "field": "lines[].batch_number", "note": "see rule R-05" },
+          { "field": "lines[].best_before_date", "note": "see rule R-05" },
+          { "field": "lines[].actual_weight_kg", "note": "required for variable-weight lines" }
+        ]
+      }
+    ]
+  },
+
+  "connections": {
+    "_note": "Informational. Use for first contact. Any CHANGE to details already on file is a proposal that must be signature-verified and, for sensitive details, human-confirmed before use.",
+    "channels": [
+      {
+        "channel": "AS2",
+        "address": "as2.nordkauf.example",
+        "as2_id": "NORDKAUF-PROD",
+        "certificate_fingerprint": "CERT-EXAMPLE-ONLY-9f8e7d"
+      },
+      {
+        "channel": "SFTP",
+        "address": "sftp.nordkauf.example",
+        "folder": "/inbound/orders-responses"
+      }
+    ]
+  },
+
+  "answer_key": {
+    "_note": "Miniature examples for testing any software built against this rulebook. Real rulebooks carry fuller examples covering every scenario.",
+    "valid_examples": [
+      {
+        "description": "A correct one-line order.",
+        "content": {
+          "order_number": "ORD-TEST-1",
+          "order_date": "2026-08-01",
+          "requested_delivery_date": "2026-08-04",
+          "deliver_to": { "company_id": "GLN 4099999000107" },
+          "invoice_to": { "company_id": "GLN 4099999000039" },
+          "price_list_reference": "PL-2026-09",
+          "lines": [
+            {
+              "line_number": 1,
+              "product_id": "GTIN 04088888100016",
+              "ordered_quantity": 10,
+              "quantity_unit": "pieces",
+              "agreed_unit_price": { "amount": 0.62, "currency": "EUR" }
+            }
+          ]
+        },
+        "expected_result": "passes all rules"
+      }
+    ],
+    "invalid_examples": [
+      {
+        "description": "Missing GTIN and zero quantity.",
+        "content": {
+          "order_number": "ORD-TEST-2",
+          "order_date": "2026-08-01",
+          "requested_delivery_date": "2026-08-04",
+          "deliver_to": { "company_id": "GLN 4099999000107" },
+          "invoice_to": { "company_id": "GLN 4099999000039" },
+          "price_list_reference": "PL-2026-09",
+          "lines": [
+            { "line_number": 1, "ordered_quantity": 0, "quantity_unit": "pieces" }
+          ]
+        },
+        "expected_errors": ["R-01", "R-02"]
+      },
+      {
+        "description": "Variable-weight line wrongly priced per piece, and no price list referenced.",
+        "content": {
+          "order_number": "ORD-TEST-3",
+          "order_date": "2026-08-01",
+          "requested_delivery_date": "2026-08-04",
+          "deliver_to": { "company_id": "GLN 4099999000107" },
+          "invoice_to": { "company_id": "GLN 4099999000039" },
+          "lines": [
+            {
+              "line_number": 1,
+              "product_id": "GTIN 04088888200013",
+              "ordered_quantity": 5,
+              "quantity_unit": "pieces",
+              "pricing_note": "priced_by_weight",
+              "agreed_unit_price": { "amount": 7.9, "currency": "EUR" }
+            }
+          ]
+        },
+        "expected_errors": ["R-03", "R-04"]
+      }
+    ]
+  }
+}
