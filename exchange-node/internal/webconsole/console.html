@@ -14,14 +14,30 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--paper);color:var(--ink);
        font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
-  header{background:var(--surface);border-bottom:2px solid var(--ink);padding:14px 22px;
-         display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-  header h1{font-size:18px;margin:0;letter-spacing:-.01em}
-  header .gln{color:var(--muted);font-size:12px}
-  header .poll{margin-left:auto;color:var(--muted);font-size:12px}
-  main{max-width:1080px;margin:0 auto;padding:18px 22px 60px;display:grid;gap:22px}
-  section h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);
-             margin:0 0 8px}
+  header{background:var(--surface);border-bottom:2px solid var(--ink);padding:0 22px}
+  .head-top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:14px 0 6px}
+  .head-top h1{font-size:18px;margin:0;letter-spacing:-.01em}
+  .head-top .gln{color:var(--muted);font-size:12px}
+  .head-top .live{margin-left:auto;color:var(--muted);font-size:12px}
+  nav{display:flex;gap:4px;flex-wrap:wrap}
+  nav button{border:none;background:none;font:inherit;font-weight:600;color:var(--muted);
+             padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent}
+  nav button.active{color:var(--accent);border-bottom-color:var(--accent)}
+  nav .badge{display:inline-block;min-width:18px;text-align:center;font-size:11px;font-weight:700;
+             border-radius:999px;padding:1px 6px;margin-left:5px;vertical-align:1px}
+  nav .badge.amber{color:var(--amber);background:var(--amber-bg)}
+  nav .badge.red{color:var(--red);background:var(--red-bg)}
+  nav .badge:empty{display:none}
+  main{max-width:1080px;margin:0 auto;padding:18px 22px 60px}
+  .tab{display:none}
+  .tab.active{display:block}
+  .intro{color:var(--muted);margin:4px 0 18px;max-width:72ch}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);margin:26px 0 8px}
+  h2:first-of-type{margin-top:4px}
+  details.help{margin:0 0 12px;max-width:72ch}
+  details.help summary{cursor:pointer;color:var(--accent);font-size:12.5px;font-weight:600}
+  details.help p{color:var(--muted);font-size:13px;margin:6px 0 0;background:var(--accent-soft);
+                 border-radius:5px;padding:9px 12px}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:6px;
         padding:12px 16px;margin-bottom:10px}
   .card.green{border-left:4px solid var(--green)}
@@ -49,40 +65,150 @@
   .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   input[type=text]{border:1px solid var(--line);border-radius:4px;padding:6px 9px;font:inherit;min-width:230px}
   select{border:1px solid var(--line);border-radius:4px;padding:6px 9px;font:inherit;background:var(--surface)}
-  label.chk{font-size:12px;color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+  label.chk{font-size:12px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;max-width:420px}
   button{border:1px solid var(--line);background:var(--surface);border-radius:4px;
          padding:6px 14px;font:inherit;font-weight:600;cursor:pointer}
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
   button.danger{color:var(--red);border-color:var(--red)}
   button:disabled{opacity:.45;cursor:not-allowed}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:14px 0 6px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;
+        cursor:pointer;transition:border-color .12s}
+  .stat:hover{border-color:var(--accent)}
+  .stat .n{font-size:30px;font-weight:700;letter-spacing:-.02em}
+  .stat .n.amber{color:var(--amber)} .stat .n.red{color:var(--red)} .stat .n.green{color:var(--green)}
+  .stat .label{font-weight:600;margin-top:2px}
+  .stat .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  table.plain{border-collapse:collapse;font-size:13px;width:100%;background:var(--surface);
+              border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  table.plain th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+                 text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--paper)}
+  table.plain td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.plain tr:last-child td{border-bottom:none}
   table.kv{border-collapse:collapse;font-size:13px;margin-top:6px}
   table.kv td{padding:3px 14px 3px 0;vertical-align:top}
   table.kv td:first-child{color:var(--muted);white-space:nowrap}
   .locked{background:var(--paper);color:var(--muted);border:1px solid var(--line);
           border-radius:4px;padding:6px 9px;display:inline-block}
   .lockednote{font-size:11px;color:var(--muted);display:block}
-  .empty{color:var(--muted);font-size:13px;font-style:italic}
+  .empty{color:var(--muted);font-size:13px;font-style:italic;max-width:70ch}
+  .mono{font:12px/1.7 ui-monospace,monospace}
   .log{font:12px/1.7 ui-monospace,monospace;color:var(--muted);background:var(--surface);
-       border:1px solid var(--line);border-radius:6px;padding:10px 14px;max-height:220px;overflow-y:auto}
+       border:1px solid var(--line);border-radius:6px;padding:10px 14px;max-height:260px;overflow-y:auto}
+  .machine{font:12px/1.5 ui-monospace,monospace;background:var(--paper);border:1px solid var(--line);
+           border-radius:4px;padding:2px 7px;display:inline-block;margin-top:2px;word-break:break-all}
   .toast{position:fixed;bottom:18px;right:18px;background:var(--ink);color:#fff;
-         padding:10px 16px;border-radius:6px;font-size:13px;max-width:420px;white-space:pre-wrap;display:none}
+         padding:10px 16px;border-radius:6px;font-size:13px;max-width:460px;white-space:pre-wrap;display:none;z-index:9}
   .content-view{font:12px/1.6 ui-monospace,monospace;background:var(--paper);border:1px solid var(--line);
                 border-radius:4px;padding:8px 12px;margin-top:8px;overflow-x:auto;display:none}
+  .rule-item{padding:8px 12px;border-bottom:1px solid var(--line)}
+  .rule-item:last-child{border-bottom:none}
+  .rulebox{background:var(--surface);border:1px solid var(--line);border-radius:6px;margin-bottom:10px}
 </style>
 </head>
 <body>
 <header>
-  <h1 id="who">Exchange node</h1>
-  <span class="gln" id="gln"></span>
-  <span class="poll">This page refreshes itself. Review queue first — nothing in it has been applied.</span>
+  <div class="head-top">
+    <h1 id="who">Exchange node</h1>
+    <span class="gln" id="gln"></span>
+    <span class="live">This page keeps itself up to date — no need to reload.</span>
+  </div>
+  <nav>
+    <button data-act="tab" data-tab="today" class="active">Today</button>
+    <button data-act="tab" data-tab="decisions">Decisions<span class="badge amber" id="badge-decisions"></span></button>
+    <button data-act="tab" data-tab="messages">Messages<span class="badge red" id="badge-red"></span></button>
+    <button data-act="tab" data-tab="tech">Technical corner</button>
+  </nav>
 </header>
 <main>
-  <section><h2>Needs your decision</h2><div id="review"></div></section>
-  <section><h2>Responses you are writing</h2><div id="drafts"></div></section>
-  <section><h2>Inbox</h2><div id="inbox"></div></section>
-  <section><h2>Quarantine — failed the signature check</h2><div id="quarantine"></div></section>
-  <section><h2>Trusted rulebooks</h2><div id="trusted"></div></section>
-  <section><h2>Activity</h2><div class="log" id="log"></div></section>
+
+<div class="tab active" id="tab-today">
+  <p class="intro">This is your company's trading mailroom. It receives orders and other trade
+  messages, checks every one against the agreed rules, helps you answer correctly, and — most
+  importantly — <b>never changes its own settings without your approval</b>.</p>
+  <div class="stats" id="stats"></div>
+  <h2>Latest activity</h2>
+  <details class="help"><summary>What am I looking at?</summary>
+    <p>Every step every message takes, newest first. "Held" means a message is waiting for a
+    decision of yours; "quarantined" means a file failed the identity check and was locked away
+    unopened.</p></details>
+  <div class="log" id="activity"></div>
+</div>
+
+<div class="tab" id="tab-decisions">
+  <p class="intro">Everything here is a <b>proposal</b> — something a partner's message asked to
+  change. Nothing on this page has happened yet, and nothing will happen unless you approve it.
+  Ignoring a proposal is always safe: it expires and the old settings stay.</p>
+  <div id="review"></div>
+</div>
+
+<div class="tab" id="tab-messages">
+  <p class="intro">Messages your partners sent you. Green means it follows all the agreed rules;
+  red means it breaks specific rules, named below it in plain words.</p>
+  <div id="drafts-wrap"><h2>Responses you are writing</h2>
+  <details class="help"><summary>Why can't I edit some fields?</summary>
+    <p>The original message dictates how it must be answered: some fields must be copied over
+    exactly (those are locked and grey), and some are yours to decide (those are open). The node
+    checks your answer against those instructions before it signs and sends anything.</p></details>
+  <div id="drafts"></div></div>
+  <h2>Inbox</h2>
+  <div id="inbox"></div>
+</div>
+
+<div class="tab" id="tab-tech">
+  <p class="intro">The technical corner. Nothing here is secret machinery — every panel below is
+  also a plain file on this computer that you could open in a text editor. This page just shows
+  those files and explains them.</p>
+
+  <h2>Who we are</h2>
+  <details class="help"><summary>What is a key fingerprint?</summary>
+    <p>Your company owns a key pair: a private key that stays on this machine and signs every
+    outgoing message, and a public key that anyone can use to check those signatures. The
+    fingerprint is the public key's short name — partners can read it back to you over the phone
+    to make sure they have the right one.</p></details>
+  <div class="card"><table class="kv" id="identity"></table></div>
+
+  <h2>Partners and their addresses</h2>
+  <details class="help"><summary>Why does this list matter so much?</summary>
+    <p>Messages only ever travel to addresses on this list. A message merely <i>claiming</i> a new
+    address never changes this list by itself — that claim becomes a proposal under Decisions, and
+    the rule is to confirm it through a different channel (phone your contact) before approving.
+    This single habit is what defeats the classic "our bank account changed" fraud.</p></details>
+  <div id="partners"></div>
+
+  <h2>Rulebooks in force</h2>
+  <details class="help"><summary>What is a rulebook?</summary>
+    <p>A rulebook is the agreed requirements for one kind of document from one partner — written
+    twice on purpose: once as a plain sentence for people, once in a small checking language for
+    the machine. Both are shown below, so you can verify they say the same thing. A rulebook is
+    known by its <i>fingerprint</i>: a code computed from its exact content, so two rulebooks with
+    the same fingerprint are guaranteed identical.</p></details>
+  <div id="rulebooks"></div>
+
+  <h2>House rules for approving changes</h2>
+  <details class="help"><summary>Can these be loosened?</summary>
+    <p>Only up to a floor that is built into the program itself: changes to addresses, keys, or
+    anything touching money or company identifiers can never be applied without a human, even if
+    someone edits this settings file. The list of "sensitive words" below is what triggers the
+    extra caution.</p></details>
+  <div class="card" id="policy"></div>
+
+  <h2>Quarantine</h2>
+  <details class="help"><summary>What ends up here?</summary>
+    <p>Files that failed the identity check — they claim to come from someone, but are not signed
+    with that company's key. They are locked away unopened and kept as evidence. Nothing inside
+    them was trusted, shown for approval, or acted on.</p></details>
+  <div id="quarantine"></div>
+
+  <h2>The diary (audit log)</h2>
+  <details class="help"><summary>How can I trust this diary?</summary>
+    <p>Every line records one event — a proposal noticed, a decision made, a change applied, a file
+    refused — and carries a seal computed from its own content <i>plus the seal of the line before
+    it</i>. Editing any past line breaks every seal after it. The button re-checks the whole chain.</p></details>
+  <div class="actions" style="margin-bottom:8px"><button data-act="verify-audit">Check the diary now</button></div>
+  <div class="log" id="audit"></div>
+</div>
+
 </main>
 <div class="toast" id="toast"></div>
 <script>
@@ -91,27 +217,89 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-let lastState = null;
-
 function toast(msg, ok){
   const t = $("toast");
   t.textContent = msg;
   t.style.display = "block";
   t.style.background = ok === false ? "var(--red)" : "var(--ink)";
   clearTimeout(t._h);
-  t._h = setTimeout(() => t.style.display = "none", 6000);
+  t._h = setTimeout(() => t.style.display = "none", 7000);
 }
 
 async function post(path, body){
   const r = await fetch(path, {method:"POST", headers:{"Content-Type":"application/json"},
-                               body: JSON.stringify(body)});
+                               body: JSON.stringify(body || {})});
   const data = await r.json().catch(() => ({}));
   if(!r.ok){ toast(data.error || "That did not work.", false); throw new Error(data.error); }
   return data;
 }
 
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(el => el.classList.toggle("active", el.id === "tab-" + name));
+  document.querySelectorAll("nav button[data-tab]").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+}
+
+// ---------- Today ----------
+
+function renderStats(s){
+  const inbox = s.inbox || [];
+  const red = inbox.filter(m => m.status === "red").length;
+  const pending = (s.review || []).length;
+  const held = (s.held || []).length;
+  const q = (s.quarantine || []).length;
+  const partners = (s.partners || []).length;
+  const cards = [
+    {n: pending, cls: pending ? "amber" : "", label: "Decisions waiting for you",
+     sub: pending ? "a partner proposed a change — nothing happens until you decide" : "nothing needs your approval right now",
+     tab: "decisions"},
+    {n: inbox.length, cls: red ? "red" : "green", label: "Messages received",
+     sub: red ? red + " break the rules — open to see exactly which rules" : "all follow the agreed rules",
+     tab: "messages"},
+    {n: held, cls: held ? "amber" : "", label: "Messages on hold",
+     sub: held ? "waiting for a rulebook decision under Decisions" : "no message is waiting on a decision",
+     tab: "decisions"},
+    {n: q, cls: q ? "red" : "", label: "Quarantined files",
+     sub: q ? "failed the identity check — locked away unopened" : "no file has failed the identity check",
+     tab: "tech"},
+    {n: partners, cls: "", label: "Trusted partners",
+     sub: "companies whose keys and addresses are on file", tab: "tech"},
+  ];
+  $("stats").innerHTML = cards.map(c => `<div class="stat" data-act="tab" data-tab="${c.tab}">
+    <div class="n ${c.cls}">${c.n}</div><div class="label">${esc(c.label)}</div>
+    <div class="sub">${esc(c.sub)}</div></div>`).join("");
+}
+
+const stageWords = {
+  "received|ok": "arrived",
+  "signature_check|ok": "signature verified",
+  "signature_check|quarantined": "IDENTITY CHECK FAILED — quarantined",
+  "rulebook_check|held": "put on hold, awaiting your decision",
+  "rulebook_check|quarantined": "rulebook check failed — quarantined",
+  "rulebook_check|refused": "refused (outdated rulebook version)",
+  "content_validated|green": "passed all rule checks",
+  "content_validated|red": "broke rules",
+  "connections_check|proposal": "carried a settings change — filed as a proposal",
+  "delivered_to_erp|ok": "delivered",
+  "resumed|ok": "resumed after your approval",
+  "refused|rejected": "refused (its proposal was rejected)",
+  "response_drafted|ok": "response draft created",
+  "sent|ok": "sent",
+};
+
+function renderActivity(log){
+  $("activity").innerHTML = (log || []).slice().reverse().map(e => {
+    const words = stageWords[e.stage + "|" + e.outcome] || (e.stage + " → " + e.outcome);
+    return `${esc(e.at)}  <b>${esc(e.message_number || "")}</b>  ${esc(words)}${e.detail ? "  · " + esc(e.detail) : ""}`;
+  }).join("<br>") || '<span class="empty">Nothing has happened yet.</span>';
+}
+
+// ---------- Decisions ----------
+
 function renderReview(items){
-  if(!items || !items.length){ $("review").innerHTML = '<div class="empty">Nothing waits for you.</div>'; return; }
+  if(!items || !items.length){
+    $("review").innerHTML = '<div class="empty">Nothing waits for you. When a partner\'s message proposes a change — a new rulebook, a new version, a new address — it will appear here first, fully explained, and nothing will be applied until you approve it.</div>';
+    return;
+  }
   $("review").innerHTML = items.map(p => {
     const diffs = (p.what_changes || []).map(d =>
       `<li class="${esc(d.change)}"><b>${esc(d.change)}</b> · ${esc(d.item)} — ${esc(d.in_plain_words)}
@@ -123,7 +311,7 @@ function renderReview(items){
       <span class="title">${esc(describeProposal(p))}</span>
       <div class="meta">Proposed by <b>${esc(p.proposed_by?.name)}</b> (${esc(p.proposed_by?.company_id)}) ·
         key ${esc(p.proposed_by?.key_fingerprint)} · ${esc(p.proposed_by?.key_continuity)} ·
-        seen ${p.times_seen}× · carried by ${esc((p.carried_by||[]).join(", "))}</div>
+        seen ${Number(p.times_seen) || 1}× · carried by ${esc((p.carried_by||[]).join(", "))}</div>
       ${p.answer_key_note ? `<div class="meta" style="${akWarn ? 'color:var(--red);font-weight:600' : ''}">${esc(p.answer_key_note)}</div>` : ""}
       <ul class="diff">${diffs}</ul>
       <div class="futures">
@@ -132,7 +320,7 @@ function renderReview(items){
         <b>If you do nothing:</b> ${esc(p.if_ignored)}
       </div>
       <div class="actions">
-        <input type="text" id="reason-${esc(p.proposal_id)}" placeholder="Your reason (required — it goes in the audit log)">
+        <input type="text" id="reason-${esc(p.proposal_id)}" placeholder="Your reason (required — it goes in the audit diary)">
         ${needsOOB ? `<label class="chk"><input type="checkbox" id="oob-${esc(p.proposal_id)}">
           I confirmed this change through a different channel (phoned my contact)</label>` : ""}
         <button class="primary" ${akWarn ? "disabled title='Fails its own answer key'" : ""}
@@ -155,20 +343,25 @@ function describeProposal(p){
 
 async function decide(id, decision, needsOOB){
   const reason = $("reason-" + id).value.trim();
-  if(!reason){ toast("A reason is required — it makes the audit log legible.", false); return; }
+  if(!reason){ toast("A reason is required — it goes in the audit diary so everyone later understands why.", false); return; }
   const body = {proposal_id:id, decision, reason, as:"operator"};
   if(needsOOB) body.out_of_band_confirmed = $("oob-" + id).checked;
   const res = await post("/decision", body);
   toast(res.result || "Done.");
-  refresh();
+  refresh(true);
 }
 
+// ---------- Messages ----------
+
 function renderInbox(items, respondable){
-  if(!items || !items.length){ $("inbox").innerHTML = '<div class="empty">No messages yet.</div>'; return; }
+  if(!items || !items.length){
+    $("inbox").innerHTML = '<div class="empty">No messages yet. When a partner sends one, it appears here with a green or red check result.</div>';
+    return;
+  }
   items.sort((a,b) => (b.received_at||"").localeCompare(a.received_at||""));
   $("inbox").innerHTML = items.map((m,i) => {
     const cls = m.status === "red" ? "red" : "green";
-    const label = m.status === "red" ? "breaks the rules" : "passes all applicable rules";
+    const label = m.status === "red" ? "breaks the rules named below" : "passes all applicable rules";
     const problems = (m.violations || []).flatMap(v => v.messages).map(t => `<li>${esc(t)}</li>`).join("");
     const skips = (m.skipped_rules || []).map(sr =>
       `<li>${esc(sr.rule)} applies to the ${esc(sr.applies_to)} — noted for later</li>`).join("");
@@ -178,8 +371,8 @@ function renderInbox(items, respondable){
       ? `<button class="danger" data-act="reject-msg" data-msg="${esc(m.message_number)}">Send rejection (with rule numbers)</button>` : "";
     return `<div class="card ${cls}">
       <span class="pill ${cls}">${esc(m.status)}</span>
-      <span class="title">${esc(m.message_number)}</span> · ${esc(m.message_type)} from ${esc(m.from_name)}
-      <div class="meta">${esc(m.received_at)} ${m.rulebook ? "· rulebook " + esc(m.rulebook.id) + " v" + esc(m.rulebook.version) : ""}
+      <span class="title">${esc(m.message_number)}</span> · ${esc((m.message_type||"").replace(/_/g," "))} from ${esc(m.from_name)}
+      <div class="meta">${esc(m.received_at)} ${m.rulebook ? "· rulebook " + esc(m.rulebook.id) + " version " + esc(m.rulebook.version) : ""}
         ${m.echo_check ? "· " + esc(m.echo_check) : ""} · <b>${label}</b></div>
       ${problems ? `<ul class="problems">${problems}</ul>` : ""}
       ${skips ? `<ul class="skips">${skips}</ul>` : ""}
@@ -190,30 +383,45 @@ function renderInbox(items, respondable){
   }).join("");
 }
 
+// Which fold-out panels are open — remembered across the page's self-refresh,
+// so reading is never interrupted.
+const openViews = new Set();
+
 function toggleContent(id){
   const el = $(id);
-  el.style.display = el.style.display === "block" ? "none" : "block";
+  if(!el) return;
+  const open = el.style.display === "block";
+  el.style.display = open ? "none" : "block";
+  if(open) openViews.delete(id); else openViews.add(id);
+}
+
+function restoreOpenViews(){
+  for(const id of openViews){
+    const el = $(id);
+    if(el) el.style.display = "block";
+  }
 }
 
 async function startResponse(msg, type){
   await post("/respond/start", {message_number: msg, response_type: type});
-  toast("Draft created — fill it in under “Responses you are writing”.");
-  refresh();
+  toast("Draft created — fill it in under Messages → “Responses you are writing”.");
+  refresh(true);
 }
 
 async function rejectMessage(msg){
   const res = await post("/reject-message", {message_number: msg});
   toast("Rejection sent: " + res.sent);
-  refresh();
+  refresh(true);
 }
 
 function renderDrafts(items){
-  if(!items || !items.length){ $("drafts").innerHTML = '<div class="empty">No open drafts.</div>'; return; }
+  $("drafts-wrap").style.display = items && items.length ? "block" : "none";
+  if(!items || !items.length){ $("drafts").innerHTML = ""; return; }
   $("drafts").innerHTML = items.map(d => {
     const locked = (d.locked_paths || []).map(p => {
       const v = getPath(d.content, p);
       return `<tr><td>${esc(p)}</td><td><span class="locked">${esc(JSON.stringify(v))}</span>
-        <span class="lockednote">copied from the order — you cannot edit this</span></td></tr>`;
+        <span class="lockednote">copied from the original — you cannot edit this</span></td></tr>`;
     }).join("");
     const holes = (d.holes || []).map((h,i) => {
       const hid = `h-${esc(d.draft_id)}-${i}`;
@@ -225,7 +433,7 @@ function renderDrafts(items){
     }).join("");
     return `<div class="card amber">
       <span class="pill amber">draft</span>
-      <span class="title">${esc(d.response_type.replace(/_/g," "))}</span> answering ${esc(d.based_on)} for ${esc(d.partner_name)}
+      <span class="title">${esc((d.response_type||"").replace(/_/g," "))}</span> answering ${esc(d.based_on)} for ${esc(d.partner_name)}
       ${d.deadline ? `<div class="meta">Deadline: ${esc(d.deadline)}</div>` : ""}
       <table class="kv">${locked}${holes}</table>
       <div class="actions"><button class="primary" data-act="finish" data-draft="${esc(d.draft_id)}">Check &amp; send</button></div>
@@ -251,70 +459,163 @@ async function finishDraft(draftID){
     else fills[el.dataset.path] = "";
   });
   const res = await post("/respond/finish", {draft_id: draftID, fills});
-  toast("Checked against the choreography, signed, and sent: " + res.sent);
-  refresh();
+  toast("Checked against the original's instructions, signed, and sent: " + res.sent);
+  refresh(true);
+}
+
+// ---------- Technical corner ----------
+
+function renderIdentity(s){
+  const d = s.identity_details || {};
+  $("identity").innerHTML = `
+    <tr><td>Company</td><td><b>${esc(s.identity?.name)}</b> · ${esc(s.identity?.company_id)}</td></tr>
+    <tr><td>Our key fingerprint</td><td><span class="mono">${esc(d.key_fingerprint)}</span> — partners see this when they verify our signatures</td></tr>
+    <tr><td>Key directory</td><td><span class="mono">${esc(d.directory)}</span> — the shared "phone book" of public keys</td></tr>
+    <tr><td>Everything lives in</td><td><span class="mono">${esc(d.home)}</span> — plain files, safe to look at, dangerous to edit by hand</td></tr>`;
+}
+
+function renderPartners(items){
+  if(!items || !items.length){
+    $("partners").innerHTML = '<div class="empty">No partners on file yet. The first message from a new partner becomes a first-contact proposal under Decisions; approving it pins their key and addresses here.</div>';
+    return;
+  }
+  const rows = items.map(p => {
+    const channels = (p.channels || []).map(c =>
+      `${esc(c.channel)} → <span class="mono">${esc(c.address || c.folder || "")}</span>`).join("<br>") || "—";
+    return `<tr><td><b>${esc(p.name)}</b><br><span class="meta">${esc(p.company_id)}</span></td>
+      <td><span class="mono">${esc(p.key_fingerprint)}</span></td>
+      <td>${channels}</td>
+      <td class="meta">${esc(p.approved_via || "")}</td></tr>`;
+  }).join("");
+  $("partners").innerHTML = `<table class="plain">
+    <tr><th>Partner</th><th>Their key</th><th>Where our messages to them go</th><th>How it got here</th></tr>${rows}</table>`;
+}
+
+function renderRulebooks(items){
+  if(!items || !items.length){
+    $("rulebooks").innerHTML = '<div class="empty">No rulebooks trusted yet — the first one arrives with a partner\'s first message and waits under Decisions.</div>';
+    return;
+  }
+  $("rulebooks").innerHTML = items.map((rb, idx) => {
+    const versions = (rb.accepting || []).map(v =>
+      `<tr><td>version ${v.version}</td>
+       <td><span class="mono">${esc(String(v.fingerprint||"").slice(0,20))}…</span></td>
+       <td>trusted from ${esc(v.trusted_from)}</td>
+       <td>${v.also_accepted_until ? "still accepted until " + esc(v.also_accepted_until) + " (transition window)" : "current"}</td></tr>`).join("");
+    const rules = (rb.rules || []).map(r => `<div class="rule-item">
+        <b>${esc(r.rule)}</b>${r.applies_to ? ` <span class="pill blue">for the ${esc(r.applies_to.replace(/_/g," "))}</span>` : ""} — ${esc(r.plain_language)}
+        <div class="meta">The machine's wording of the same sentence:</div>
+        <span class="machine">${esc(r.machine_check)}</span>
+      </div>`).join("");
+    return `<div class="rulebox">
+      <div style="padding:12px 16px 6px"><span class="title">${esc(rb.rulebook_id)}</span>
+        <span class="meta"> · published by ${esc(rb.published_by || "the partner")}</span></div>
+      <div style="padding:0 16px 10px"><table class="plain">${versions}</table></div>
+      <div style="padding:0 16px 6px"><button data-act="toggle" data-target="rules-${idx}">Show the rules (${(rb.rules||[]).length})</button></div>
+      <div class="content-view" id="rules-${idx}" style="margin:0 16px 12px">${rules}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderPolicy(p){
+  if(!p){ $("policy").innerHTML = '<span class="empty">No policy file found.</span>'; return; }
+  const kinds = Object.entries(p.default_class_by_kind || {}).map(([k,v]) =>
+    `<tr><td>${esc(k.replace(/_/g," "))}</td><td>${v === "two-keys" ? "two different people must approve" : "one person must review and approve"}</td></tr>`).join("");
+  $("policy").innerHTML = `
+    <table class="kv">${kinds}
+    <tr><td>Automatic approval</td><td>${p.auto_apply_enabled ? "on" : "off — every change needs a human"} (the program refuses to turn this on for addresses, keys, or money fields)</td></tr>
+    <tr><td>Extra caution when a change touches</td><td>${esc((p.escalate_to_two_keys_when_touching||[]).join(", "))}</td></tr>
+    <tr><td>Proposals expire after</td><td>${Number(p.expiry_days)||0} days of no decision — the old settings stay</td></tr>
+    <tr><td>Transition window for rulebook updates</td><td>${Number(p.overlap_days_default)||0} days during which the previous version is still accepted</td></tr>
+    <tr><td>Out-of-band confirmation required for</td><td>${esc((p.require_out_of_band_check_for_kinds||[]).map(k=>k.replace(/_/g," ")).join(", ") || "—")}</td></tr>
+    </table>`;
 }
 
 function renderQuarantine(items){
-  if(!items || !items.length){ $("quarantine").innerHTML = '<div class="empty">Nothing quarantined.</div>'; return; }
+  if(!items || !items.length){
+    $("quarantine").innerHTML = '<div class="empty">Nothing quarantined — no file has failed the identity check.</div>';
+    return;
+  }
   $("quarantine").innerHTML = items.map(q => `<div class="card red">
     <span class="pill red">quarantined</span> <span class="title">${esc(q.file)}</span>
     <div class="meta">${esc(q.reason)}</div></div>`).join("");
 }
 
-function renderTrusted(items){
-  if(!items || !items.length){ $("trusted").innerHTML = '<div class="empty">No rulebooks trusted yet — first contact will bring one.</div>'; return; }
-  $("trusted").innerHTML = items.map(rb => {
-    const versions = (rb.accepting || []).map(v =>
-      `version ${v.version} (${esc(v.fingerprint).slice(0,16)}…) trusted from ${esc(v.trusted_from)}` +
-      (v.also_accepted_until ? ` — still accepted until ${esc(v.also_accepted_until)}` : "")).join("<br>");
-    return `<div class="card"><span class="title">${esc(rb.rulebook_id)}</span>
-      <div class="meta">${versions}</div></div>`;
-  }).join("");
+const auditWords = {
+  proposal_noticed: "a change proposal was noticed and filed",
+  proposal_seen_again: "the same proposal arrived again (counted, not re-filed)",
+  decision_recorded: "a human decision was recorded",
+  change_applied: "an approved change was applied to the live settings",
+  verification_failed: "a file failed the identity check and was quarantined",
+  downgrade_attempt: "a message cited an outdated rulebook version and was refused",
+  same_version_different_content: "a counterfeit rulebook was detected and quarantined",
+  rejected_proposal_resent: "a partner re-sent an already-rejected proposal (noted only)",
+  apply_verification_failed: "an apply was stopped because re-verification failed",
+};
+
+function renderAudit(items){
+  $("audit").innerHTML = (items || []).slice().reverse().map(r => {
+    const words = auditWords[r.event] || r.event;
+    const who = r.actor ? ` · by ${r.actor}` : "";
+    const subj = r.proposal_id ? ` · ${r.proposal_id}` : (r.file ? ` · ${r.file}` : "");
+    const why = r.reason ? ` · reason: "${r.reason}"` : "";
+    return esc(`${r.at}  ${words}${subj}${who}${why}`);
+  }).join("<br>") || '<span class="empty">The diary is empty.</span>';
 }
 
-function renderLog(items){
-  $("log").innerHTML = (items || []).slice().reverse().map(e =>
-    `${esc(e.at)}  ${esc(e.message_number || "")}  ${esc(e.stage)} → ${esc(e.outcome)}  ${esc(e.detail || "")}`
-  ).join("<br>");
+async function verifyAudit(){
+  const res = await post("/audit/verify");
+  toast(res.result);
 }
+
+// ---------- plumbing ----------
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if(!el) return;
+  const ds = el.dataset;
+  switch(ds.act){
+    case "tab":         switchTab(ds.tab); break;
+    case "decide":      decide(ds.id, ds.decision, ds.oob === "1"); break;
+    case "respond":     startResponse(ds.msg, ds.type); break;
+    case "reject-msg":  rejectMessage(ds.msg); break;
+    case "finish":      finishDraft(ds.draft); break;
+    case "toggle":      toggleContent(ds.target); break;
+    case "verify-audit": verifyAudit(); break;
+  }
+});
 
 function focusSafe(){
   const a = document.activeElement;
   return a && (a.tagName === "INPUT" || a.tagName === "SELECT");
 }
 
-async function refresh(){
+async function refresh(force){
   try{
     const r = await fetch("/state");
     const s = await r.json();
-    lastState = s;
     $("who").textContent = s.identity?.name || "Exchange node";
     $("gln").textContent = s.identity?.company_id || "";
-    if(focusSafe()) return; // don't yank the form out from under a typing human
+    document.title = (s.identity?.name || "Exchange node") + " — Exchange Node";
+    const pending = (s.review || []).length;
+    const red = (s.inbox || []).filter(m => m.status === "red").length;
+    $("badge-decisions").textContent = pending || "";
+    $("badge-red").textContent = red || "";
+    if(!force && focusSafe()) return; // don't yank a form out from under a typing human
+    renderStats(s);
+    renderActivity(s.log);
     renderReview(s.review);
     renderDrafts(s.drafts);
     renderInbox(s.inbox || [], s.respondable || {});
+    renderIdentity(s);
+    renderPartners(s.partners);
+    renderRulebooks(s.rulebooks);
+    renderPolicy(s.policy);
     renderQuarantine(s.quarantine);
-    renderTrusted(s.trusted_rulebooks);
-    renderLog(s.log);
-  }catch(e){ /* node restarting; try again on the next tick */ }
+    renderAudit(s.audit);
+    restoreOpenViews();
+  }catch(e){ /* the node is restarting; the next tick will catch up */ }
 }
-
-// One delegated click handler; no inline handlers, so dynamic values never
-// reach a JavaScript context — they live in data attributes only.
-document.addEventListener("click", e => {
-  const btn = e.target.closest("button[data-act]");
-  if(!btn) return;
-  const ds = btn.dataset;
-  switch(ds.act){
-    case "decide":      decide(ds.id, ds.decision, ds.oob === "1"); break;
-    case "respond":     startResponse(ds.msg, ds.type); break;
-    case "reject-msg":  rejectMessage(ds.msg); break;
-    case "finish":      finishDraft(ds.draft); break;
-    case "toggle":      toggleContent(ds.target); break;
-  }
-});
 
 refresh();
 setInterval(refresh, 1500);

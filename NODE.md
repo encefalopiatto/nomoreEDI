@@ -17,6 +17,15 @@ Think of it as a very careful mailroom clerk that each company runs. For every a
 
 That is the whole idea from the discussion, running: *the software exchanges and routes files, treats them as config files as well, and applies their directions only after human review.*
 
+## The screens
+
+Each node serves one web page with four areas. The first three are for everyone; the fourth is for technicians — and it explains itself in plain words too.
+
+- **Today** — the overview: how many decisions wait for you, how many messages arrived (and whether any break rules), what sits on hold or in quarantine, and a running plain-language account of everything that happened ("arrived", "signature verified", "put on hold, awaiting your decision").
+- **Decisions** — the review queue. Everything here is a *proposal*: nothing on this page has happened yet, and ignoring a proposal is always safe (it expires; the old settings stay). Each card shows who proposed it, how long their key has been known, the change in plain before/after words, and the three futures: what happens if you approve, reject, or do nothing.
+- **Messages** — the inbox, green or red, with the exact broken rules named in sentences; response drafts with locked copied fields and open decision fields.
+- **Technical corner** — for technicians, still in plain language: who we are (our key's fingerprint and where everything lives on disk), the partner address book (with the reminder that messages only ever travel to addresses *on this list*), the rulebooks in force — every rule shown twice, the plain sentence and "the machine's wording of the same sentence", so anyone can verify they match — the house rules for approving changes (and the safety floor no settings file can loosen), quarantine, and the tamper-evident diary with a "Check the diary now" button that re-verifies its seal chain.
+
 ## What you need
 
 Go 1.22 or newer (one install, nothing else). Then:

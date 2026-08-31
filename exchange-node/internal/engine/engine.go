@@ -31,6 +31,7 @@ type Node struct {
 	Identity store.Identity
 	Dir      *directory.Directory
 	Priv     ed25519.PrivateKey
+	Pub      ed25519.PublicKey
 	Desk     changesdesk.Desk
 	Trust    trust.View
 	Sender   transport.Sender
@@ -96,6 +97,10 @@ func Open(path string) (*Node, error) {
 	if err != nil {
 		return nil, err
 	}
+	pub, err := sign.LoadPublic(h.File("keys", "public.key"))
+	if err != nil {
+		return nil, err
+	}
 	auditLog := audit.Open(h.File("audit", "audit-log.jsonl"))
 	policy, err := changesdesk.LoadPolicy(h)
 	if err != nil {
@@ -103,7 +108,7 @@ func Open(path string) (*Node, error) {
 	}
 	tv := trust.View{Home: h}
 	n := &Node{
-		Home: h, Identity: id, Dir: dir, Priv: priv,
+		Home: h, Identity: id, Dir: dir, Priv: priv, Pub: pub,
 		Trust:  tv,
 		Desk:   changesdesk.Desk{Home: h, Trust: tv, Queue: changesdesk.Queue{Home: h}, Policy: policy, Audit: auditLog},
 		Sender: transport.Folder{},

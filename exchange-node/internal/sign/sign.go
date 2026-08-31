@@ -59,6 +59,15 @@ func LoadPrivate(path string) (ed25519.PrivateKey, error) {
 	return priv, nil
 }
 
+// LoadPublic reads a PEM public key file.
+func LoadPublic(path string) (ed25519.PublicKey, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublicPEM(string(b))
+}
+
 func ParsePublicPEM(pemText string) (ed25519.PublicKey, error) {
 	block, _ := pem.Decode([]byte(pemText))
 	if block == nil {

@@ -152,6 +152,26 @@ func (v View) Connections(companyID string) ([]any, bool) {
 	return c.Channels, true
 }
 
+// ListPartners returns every pinned partner.
+func (v View) ListPartners() []Partner {
+	dir := v.Home.File("trusted", "partners")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var out []Partner
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		var p Partner
+		if store.ReadJSON(filepath.Join(dir, e.Name()), &p) == nil {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
 // ListRulebooks returns every rulebook id with a trust record.
 func (v View) ListRulebooks() []RulebookTrust {
 	dir := v.Home.File("trusted", "rulebooks")

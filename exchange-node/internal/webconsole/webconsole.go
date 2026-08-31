@@ -15,7 +15,9 @@ import (
 
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/engine"
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/respond"
+	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/sign"
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/store"
+	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/supermessage"
 )
 
 //go:embed console.html
@@ -71,15 +73,62 @@ func State(n *engine.Node) map[string]any {
 		}
 	}
 	log := n.Home.ReadLog()
-	if len(log) > 40 {
-		log = log[len(log)-40:]
+	if len(log) > 60 {
+		log = log[len(log)-60:]
 	}
+
+	// The technical corner's data: partners with their addresses, the
+	// rulebooks with their actual rules, the house rules, the audit diary.
+	var partners []map[string]any
+	for _, p := range n.Trust.ListPartners() {
+		entry := map[string]any{
+			"name": p.Name, "company_id": p.CompanyID,
+			"key_fingerprint": p.KeyFingerprint, "first_seen": p.FirstSeen,
+			"approved_via": p.ApprovedVia,
+		}
+		if channels, ok := n.Trust.Connections(p.CompanyID); ok {
+			entry["channels"] = channels
+		}
+		partners = append(partners, entry)
+	}
+	var rulebooks []map[string]any
+	for _, rt := range n.Trust.ListRulebooks() {
+		entry := map[string]any{"rulebook_id": rt.RulebookID, "accepting": rt.Accepting, "retired": rt.Retired}
+		if highest, ok := rt.HighestTrusted(); ok {
+			if raw, err := n.Trust.TrustedRulebookBytes(rt.RulebookID, highest.Fingerprint); err == nil {
+				if doc, err := supermessage.Parse(raw); err == nil {
+					norm := supermessage.Normalize(doc.M).(map[string]any)
+					entry["rules"] = norm["rules"]
+					entry["fields"] = norm["fields"]
+					entry["published_by"] = norm["published_by"]
+					entry["valid_from"] = norm["valid_from"]
+				}
+			}
+		}
+		rulebooks = append(rulebooks, entry)
+	}
+	audit := n.Audit.Read()
+	if len(audit) > 50 {
+		audit = audit[len(audit)-50:]
+	}
+	var policy any
+	store.ReadJSON(n.Home.File("policy", "review-policy.json"), &policy)
+
 	return map[string]any{
-		"identity":          n.Identity,
+		"identity": n.Identity,
+		"identity_details": map[string]any{
+			"key_fingerprint": sign.KeyFingerprint(n.Pub),
+			"directory":       n.Identity.Directory,
+			"home":            n.Home.Path,
+		},
 		"inbox":             inbox,
 		"review":            n.Desk.Queue.ListPending(),
 		"quarantine":        quarantine,
 		"trusted_rulebooks": n.Trust.ListRulebooks(),
+		"rulebooks":         rulebooks,
+		"partners":          partners,
+		"policy":            policy,
+		"audit":             audit,
 		"drafts":            drafts,
 		"respondable":       respondable,
 		"held":              n.Home.ListDir("held"),
@@ -210,6 +259,17 @@ func (s *Server) Handler() http.Handler {
 			return
 		}
 		writeJSON(w, map[string]any{"sent": msgNo})
+	})
+
+	mux.HandleFunc("POST /audit/verify", func(w http.ResponseWriter, r *http.Request) {
+		s.Mu.Lock()
+		err := s.Node.Audit.Verify()
+		s.Mu.Unlock()
+		if err != nil {
+			httpError(w, err)
+			return
+		}
+		writeJSON(w, map[string]any{"result": "The diary verifies: no line has been altered since it was written."})
 	})
 
 	mux.HandleFunc("POST /reject-message", func(w http.ResponseWriter, r *http.Request) {
