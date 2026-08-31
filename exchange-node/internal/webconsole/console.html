@@ -117,6 +117,7 @@
     <button data-act="tab" data-tab="today" class="active">Today</button>
     <button data-act="tab" data-tab="decisions">Decisions<span class="badge amber" id="badge-decisions"></span></button>
     <button data-act="tab" data-tab="messages">Messages<span class="badge red" id="badge-red"></span></button>
+    <button data-act="tab" data-tab="deliveries">Deliveries<span class="badge red" id="badge-deliveries"></span></button>
     <button data-act="tab" data-tab="tech">Technical corner</button>
   </nav>
 </header>
@@ -126,6 +127,7 @@
   <p class="intro">This is your company's trading mailroom. It receives orders and other trade
   messages, checks every one against the agreed rules, helps you answer correctly, and — most
   importantly — <b>never changes its own settings without your approval</b>.</p>
+  <div id="alerts"></div>
   <div class="stats" id="stats"></div>
   <h2>Latest activity</h2>
   <details class="help"><summary>What am I looking at?</summary>
@@ -152,7 +154,30 @@
     checks your answer against those instructions before it signs and sends anything.</p></details>
   <div id="drafts"></div></div>
   <h2>Inbox</h2>
+  <div class="actions" style="margin-bottom:10px">
+    <input type="text" id="filter-text" placeholder="Search: message number, partner, type…" data-filter="1">
+    <select id="filter-status" data-filter="1">
+      <option value="">all results</option>
+      <option value="green">green only</option>
+      <option value="red">red only</option>
+    </select>
+  </div>
   <div id="inbox"></div>
+</div>
+
+<div class="tab" id="tab-deliveries">
+  <p class="intro">Everything this node sent, with its honest journey. <b>"Delivered" is only ever
+  claimed when the partner's node sent back a signed receipt</b> — "handed over" means the file left
+  here and the receipt is still on its way. Failed deliveries retry by themselves; the buttons are
+  for when you don't want to wait, or when the node has given up.</p>
+  <details class="help"><summary>Is "resend" safe? Could the partner get it twice?</summary>
+    <p>Yes, it is safe. Resending ships the exact same signed file again, and the partner's node
+    recognizes the message number and ignores a copy it has already processed — so the business
+    effect happens once, however many times the file travels.</p></details>
+  <div class="actions" style="margin-bottom:10px">
+    <button data-act="retry-all">Retry everything that failed</button>
+  </div>
+  <div id="deliveries"></div>
 </div>
 
 <div class="tab" id="tab-tech">
@@ -240,6 +265,16 @@ function switchTab(name){
 }
 
 // ---------- Today ----------
+
+function renderAlerts(items){
+  if(!items || !items.length){
+    $("alerts").innerHTML = '<div class="card green"><span class="pill green">all clear</span> Nothing needs attention right now.</div>';
+    return;
+  }
+  $("alerts").innerHTML = items.map(a => `<div class="card ${esc(a.severity)}" data-act="tab" data-tab="${esc(a.tab)}" style="cursor:pointer">
+    <span class="pill ${esc(a.severity)}">${a.severity === "red" ? "attention" : "waiting"}</span> ${esc(a.text)}
+  </div>`).join("");
+}
 
 function renderStats(s){
   const inbox = s.inbox || [];
@@ -358,6 +393,15 @@ function renderInbox(items, respondable){
     $("inbox").innerHTML = '<div class="empty">No messages yet. When a partner sends one, it appears here with a green or red check result.</div>';
     return;
   }
+  const q = ($("filter-text")?.value || "").toLowerCase().trim();
+  const st = $("filter-status")?.value || "";
+  items = items.filter(m =>
+    (!st || m.status === st) &&
+    (!q || [m.message_number, m.from_name, m.message_type].join(" ").toLowerCase().includes(q)));
+  if(!items.length){
+    $("inbox").innerHTML = '<div class="empty">No messages match this search.</div>';
+    return;
+  }
   items.sort((a,b) => (b.received_at||"").localeCompare(a.received_at||""));
   $("inbox").innerHTML = items.map((m,i) => {
     const cls = m.status === "red" ? "red" : "green";
@@ -376,11 +420,67 @@ function renderInbox(items, respondable){
         ${m.echo_check ? "· " + esc(m.echo_check) : ""} · <b>${label}</b></div>
       ${problems ? `<ul class="problems">${problems}</ul>` : ""}
       ${skips ? `<ul class="skips">${skips}</ul>` : ""}
+      ${m.deadline_display && !m.responded ? `<div class="meta">Answer expected: ${esc(m.deadline_display)}</div>` : ""}
+      ${m.responded ? `<div class="meta">✓ answered</div>` : ""}
       <div class="actions">${responses} ${rejectBtn}
-        <button data-act="toggle" data-target="c${i}">Show the data</button></div>
+        <button data-act="toggle" data-target="c${i}">Show the data</button>
+        <button data-act="journey" data-msg="${esc(m.message_number)}" data-target="j${i}">Show the journey</button>
+        <button data-act="reprocess" data-msg="${esc(m.message_number)}">Re-check now</button></div>
       <pre class="content-view" id="c${i}">${esc(JSON.stringify(m.content, null, 2))}</pre>
+      <pre class="content-view" id="j${i}"></pre>
     </div>`;
   }).join("");
+}
+
+// ---------- Deliveries ----------
+
+const deliveryWords = {
+  queued: "waiting for its first attempt",
+  handed_over: "handed over — waiting for the partner's receipt",
+  delivered: "delivered (the partner's signed receipt arrived)",
+  failed: "failing — retrying automatically",
+  dead_letter: "gave up — needs you",
+};
+
+function renderDeliveries(items){
+  if(!items || !items.length){
+    $("deliveries").innerHTML = '<div class="empty">Nothing sent yet.</div>';
+    return;
+  }
+  $("deliveries").innerHTML = items.map((d,i) => {
+    const cls = d.state === "delivered" ? "green" : (d.state === "failed" || d.state === "dead_letter") ? "red" : "amber";
+    const attempts = (d.attempts || []).length;
+    return `<div class="card ${cls}">
+      <span class="pill ${cls}">${esc(d.state.replace(/_/g," "))}</span>
+      <span class="title">${esc(d.message_number)}</span> · ${esc((d.message_type||"").replace(/_/g," "))} to ${esc(d.to_name)}
+      <div class="meta">${esc(deliveryWords[d.state] || d.state)} · ${attempts} attempt(s)
+        ${d.next_retry_at ? "· next retry " + esc(d.next_retry_at) : ""}
+        ${d.delivered_at ? "· confirmed " + esc(d.delivered_at) + " by receipt " + esc(d.receipt_message) : ""}
+        ${d.last_error ? "· last error: " + esc(d.last_error) : ""}</div>
+      <div class="actions">
+        ${d.state !== "delivered" ? `<button data-act="retry-delivery" data-msg="${esc(d.message_number)}">Try again now</button>
+        <button data-act="resend-delivery" data-msg="${esc(d.message_number)}">Resend the file</button>` : ""}
+        <button data-act="journey" data-msg="${esc(d.message_number)}" data-target="dj${i}">Show the journey</button>
+      </div>
+      <pre class="content-view" id="dj${i}"></pre>
+    </div>`;
+  }).join("");
+}
+
+async function showJourney(msg, targetId){
+  const el = $(targetId);
+  if(el.style.display === "block"){ toggleContent(targetId); return; }
+  const r = await fetch("/journey?number=" + encodeURIComponent(msg));
+  const j = await r.json();
+  const lines = (j.events || []).map(e => `${e.at}  ${e.stage} → ${e.outcome}  ${e.detail || ""}`);
+  if(j.delivery){
+    lines.push("", "Delivery record:");
+    for(const a of (j.delivery.attempts || [])) lines.push(`${a.at}  attempt via ${a.channel || "?"} → ${a.outcome}  ${a.detail || ""}`);
+    lines.push(`state now: ${j.delivery.state}`);
+  }
+  el.textContent = lines.join("\n") || "No recorded steps.";
+  el.style.display = "block";
+  openViews.add(targetId);
 }
 
 // Which fold-out panels are open — remembered across the page's self-refresh,
@@ -582,6 +682,24 @@ document.addEventListener("click", e => {
     case "finish":      finishDraft(ds.draft); break;
     case "toggle":      toggleContent(ds.target); break;
     case "verify-audit": verifyAudit(); break;
+    case "journey":     showJourney(ds.msg, ds.target); break;
+    case "reprocess":   post("/message/reprocess", {message_number: ds.msg}).then(r => { toast(r.result); refresh(true); }); break;
+    case "retry-delivery": post("/delivery/retry", {message_number: ds.msg}).then(r => { toast(r.result); refresh(true); }); break;
+    case "resend-delivery":
+      if(confirm("Resend the exact same signed file? The partner ignores duplicates, so this is safe."))
+        post("/delivery/resend", {message_number: ds.msg}).then(r => { toast(r.result); refresh(true); });
+      break;
+    case "retry-all":
+      if(confirm("Retry every failed delivery now?"))
+        post("/delivery/retry-failed", {}).then(r => { toast("Retried " + r.count + " delivery(ies)."); refresh(true); });
+      break;
+  }
+});
+
+// The message filters re-render locally from the last known state.
+document.addEventListener("input", e => {
+  if(e.target.dataset?.filter && lastState){
+    renderInbox(lastState.inbox || [], lastState.respondable || {});
   }
 });
 
@@ -590,20 +708,27 @@ function focusSafe(){
   return a && (a.tagName === "INPUT" || a.tagName === "SELECT");
 }
 
+let lastState = null;
+
 async function refresh(force){
   try{
     const r = await fetch("/state");
     const s = await r.json();
+    lastState = s;
     $("who").textContent = s.identity?.name || "Exchange node";
     $("gln").textContent = s.identity?.company_id || "";
     document.title = (s.identity?.name || "Exchange node") + " — Exchange Node";
     const pending = (s.review || []).length;
     const red = (s.inbox || []).filter(m => m.status === "red").length;
+    const troubled = (s.deliveries || []).filter(d => d.state === "failed" || d.state === "dead_letter").length;
     $("badge-decisions").textContent = pending || "";
     $("badge-red").textContent = red || "";
+    $("badge-deliveries").textContent = troubled || "";
     if(!force && focusSafe()) return; // don't yank a form out from under a typing human
+    renderAlerts(s.alerts);
     renderStats(s);
     renderActivity(s.log);
+    renderDeliveries(s.deliveries);
     renderReview(s.review);
     renderDrafts(s.drafts);
     renderInbox(s.inbox || [], s.respondable || {});

@@ -21,9 +21,10 @@ That is the whole idea from the discussion, running: *the software exchanges and
 
 Each node serves one web page with four areas. The first three are for everyone; the fourth is for technicians — and it explains itself in plain words too.
 
-- **Today** — the overview: how many decisions wait for you, how many messages arrived (and whether any break rules), what sits on hold or in quarantine, and a running plain-language account of everything that happened ("arrived", "signature verified", "put on hold, awaiting your decision").
+- **Today** — the overview: an alerts panel first (what is overdue, what failed delivery, what needs a decision — each alert one plain sentence, clickable), then the counts, then a running plain-language account of everything that happened ("arrived", "signature verified", "put on hold, awaiting your decision", "delivered — receipt RCPT-…").
 - **Decisions** — the review queue. Everything here is a *proposal*: nothing on this page has happened yet, and ignoring a proposal is always safe (it expires; the old settings stay). Each card shows who proposed it, how long their key has been known, the change in plain before/after words, and the three futures: what happens if you approve, reject, or do nothing.
-- **Messages** — the inbox, green or red, with the exact broken rules named in sentences; response drafts with locked copied fields and open decision fields.
+- **Messages** — the inbox, green or red, with the exact broken rules named in sentences; search and status filters; per message a "Show the journey" timeline and a "Re-check now" button (same archived bytes, current rules — the original is never touched); response drafts with locked copied fields and open decision fields.
+- **Deliveries** — everything this node sent, with its honest journey. **"Delivered" is only ever claimed when the partner's node sent back a signed receipt** — our transport-independent equivalent of AS2's MDN. "Handed over" means the file left here and the receipt is still owed. Failed deliveries retry by themselves on a widening schedule (1 minute → 6 hours) and end as "dead letters" that need a person; the buttons — try again now, resend the file, retry everything that failed — are safe by design, because a partner's node ignores a message number it has already processed (the business effect happens once, however many times the file travels).
 - **Technical corner** — for technicians, still in plain language: who we are (our key's fingerprint and where everything lives on disk), the partner address book (with the reminder that messages only ever travel to addresses *on this list*), the rulebooks in force — every rule shown twice, the plain sentence and "the machine's wording of the same sentence", so anyone can verify they match — the house rules for approving changes (and the safety floor no settings file can loosen), quarantine, and the tamper-evident diary with a "Check the diary now" button that re-verifies its seal chain.
 
 ## What you need
@@ -66,7 +67,7 @@ Prefer it fully automatic? `go run ./cmd/exnode demo --auto` plays every human p
 
 ## What is real and what is pretend
 
-Real: the Ed25519 signatures, the fingerprints, the CEL rules from the spec running verbatim, the plain-language diffs, the hash-chained audit diary, the choreography enforcement. Pretend (stated honestly): the key directory is a local JSON file, not an operated service; "the network" is a folder; the ERP is an inbox folder; AS2/SFTP are displayed but not spoken; deadlines are computed and shown, not enforced; reviewer names are an honesty convention, not authentication; the two companies are fictional.
+Real: the Ed25519 signatures, the fingerprints, the CEL rules from the spec running verbatim, the plain-language diffs, the hash-chained audit diary, the choreography enforcement, the delivery queue with retries and signed receipts, HTTPS push, and the SFTP drop folder. Pretend or still missing (stated honestly): the key directory is a local JSON file, not an operated service; the ERP is an inbox folder; **AS2 with MDNs is not built yet** (the receipts play that role between two nodes, but classic-EDI partners expect AS2 — it is the next big piece); an SFTP partner server is trusted on first connect unless its host-key fingerprint is pinned in the connections file; deadlines are computed and alerted, not enforced; reviewer names are an honesty convention, not authentication; the two companies in the demo are fictional.
 
 ## Where things live on disk
 
@@ -90,10 +91,16 @@ A nice property to check by hand: a trusted rulebook's file name carries its fin
 
 ```
 go run ./cmd/exnode init  --home mycompany --name "My Company" --id "GLN 4012345000001" --directory ./directory.json
-go run ./cmd/exnode serve --home mycompany --port 7400
+go run ./cmd/exnode serve --home mycompany --port 7400 --transport-port 8443 --sftp-port 2222
 ```
 
 Each node is one folder plus one command; the console at the printed address does the rest. `exnode status`, `review`, `respond`, and `log --verify` do the same jobs from the terminal.
+
+**How partners reach you (and you reach them):** three roads, all carrying the same signed files — trust never comes from the road, always from the signature inside the file.
+
+- **HTTPS push** — `--transport-port` opens the address partners push supermessages to (`https://your-host:8443/exchange/inbound`). Give `--tls-cert`/`--tls-key` for TLS, or run it behind a TLS proxy.
+- **SFTP drop folder** — `--sftp-port` runs a small SFTP server that accepts uploads straight into the node's in-folder and nothing else (partners cannot list, read, or reach anything). Accounts live in `<home>/transport/sftp-users.json` (`{"username": "password"}` per partner); the server prints its host-key fingerprint at startup — give it to partners so they can pin it.
+- **Sending outward** — the node picks the best channel from each partner's connection details on file: `https`, then `sftp`, then `local-folder`. For an SFTP partner, a technician adds the username/password (and ideally the partner server's `host_key_fingerprint`) to the connections file locally — credentials never travel inside messages.
 
 ## Running the tests
 

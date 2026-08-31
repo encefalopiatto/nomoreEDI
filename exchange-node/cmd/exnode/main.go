@@ -5,6 +5,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
@@ -15,11 +16,15 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/crypto/ssh"
+
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/answerkey"
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/audit"
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/demo"
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/engine"
+	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/sign"
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/supermessage"
+	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/transport"
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/webconsole"
 )
 
@@ -248,6 +253,10 @@ func cmdServe(args []string) error {
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	home := fs.String("home", "", "node home directory")
 	port := fs.Int("port", 7400, "console port (localhost only)")
+	transportPort := fs.Int("transport-port", 0, "listen for HTTPS-pushed supermessages from partners on this port (0 = off)")
+	tlsCert := fs.String("tls-cert", "", "TLS certificate file for the transport listener (plain HTTP without it — put TLS in front)")
+	tlsKey := fs.String("tls-key", "", "TLS key file for the transport listener")
+	sftpPort := fs.Int("sftp-port", 0, "run an SFTP drop folder for partners on this port (0 = off)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -259,18 +268,81 @@ func cmdServe(args []string) error {
 		return err
 	}
 	s := &webconsole.Server{Node: n}
+
+	// The heartbeat: collect incoming files and retry due deliveries.
 	go func() {
 		for {
 			time.Sleep(time.Second)
-			s.WithLock(func(node *engine.Node) { node.ReceiveAll() })
+			s.WithLock(func(node *engine.Node) {
+				node.ReceiveAll()
+				node.ProcessQueue()
+			})
 		}
 	}()
+
+	// Partners can push supermessages straight to this node over HTTP(S).
+	if *transportPort > 0 {
+		addr := fmt.Sprintf(":%d", *transportPort)
+		go func() {
+			err := transport.StartInboundHTTP(addr, *tlsCert, *tlsKey, func(name string, b []byte) string {
+				var outcome string
+				s.WithLock(func(node *engine.Node) { outcome = node.Ingest(name, b) })
+				return outcome
+			})
+			fmt.Fprintln(os.Stderr, "the HTTPS transport listener stopped:", err)
+		}()
+		scheme := "http"
+		if *tlsCert != "" {
+			scheme = "https"
+		}
+		fmt.Printf("  receiving pushed supermessages at %s://<this-host>:%d/exchange/inbound\n", scheme, *transportPort)
+	}
+
+	// Or they can upload into an SFTP drop folder served by this node.
+	if *sftpPort > 0 {
+		users := map[string]string{}
+		usersPath := filepath.Join(*home, "transport", "sftp-users.json")
+		if err := readJSONFile(usersPath, &users); err != nil || len(users) == 0 {
+			return fmt.Errorf("the SFTP drop folder needs accounts: create %s containing {\"username\": \"password\"} per partner", usersPath)
+		}
+		hostKeyPath := filepath.Join(*home, "keys", "ssh_host_key.pem")
+		if _, err := os.Stat(hostKeyPath); err != nil {
+			if _, err := sign.Generate(hostKeyPath, hostKeyPath+".pub"); err != nil {
+				return err
+			}
+			fmt.Println("  generated a fresh SFTP host key:", hostKeyPath)
+		}
+		hostPriv, err := sign.LoadPrivate(hostKeyPath)
+		if err != nil {
+			return err
+		}
+		signer, err := ssh.NewSignerFromKey(hostPriv)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("  SFTP host key fingerprint (give this to partners): %s\n", ssh.FingerprintSHA256(signer.PublicKey()))
+		inDir := filepath.Join(*home, "transport", "in")
+		go func() {
+			err := transport.StartInboundSFTP(fmt.Sprintf(":%d", *sftpPort), users, signer, inDir)
+			fmt.Fprintln(os.Stderr, "the SFTP listener stopped:", err)
+		}()
+		fmt.Printf("  SFTP drop folder for partners on port %d\n", *sftpPort)
+	}
+
 	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *port))
 	if err != nil {
 		return err
 	}
 	fmt.Printf("%s — console at http://localhost:%d (Ctrl-C to stop)\n", n.Identity.Name, *port)
 	return http.Serve(ln, s.Handler())
+}
+
+func readJSONFile(path string, v any) error {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, v)
 }
 
 // cmdCheck is the standalone reader: it proves a supermessage file against

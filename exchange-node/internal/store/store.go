@@ -43,7 +43,7 @@ var layout = []string{
 	"inbox",
 	"inbox/quarantine",
 	"outbox/drafts",
-	"outbox/ready",
+	"outbox/queue",
 	"outbox/sent",
 	"archive",
 	"log",

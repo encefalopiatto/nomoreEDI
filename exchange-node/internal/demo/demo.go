@@ -508,8 +508,9 @@ func (d *Demo) actF() error {
 	}
 	fraud["about"].(map[string]any)["signature"].(map[string]any)["value"] = sign.Sign(attackerPriv, signingBytes)
 	// The attacker drops the file straight into the supplier's folder.
-	if err := (transport.Folder{}).Send(d.Supplier.Node.Home.File("transport", "in"),
-		"ORD-2026-99999.supermessage.json", supermessage.MarshalPretty(fraud)); err != nil {
+	if err := transport.Deliver(transport.Channel{
+		"channel": "local-folder", "address": d.Supplier.Node.Home.File("transport", "in"),
+	}, "ORD-2026-99999.supermessage.json", supermessage.MarshalPretty(fraud)); err != nil {
 		return err
 	}
 	d.receiveSupplier()

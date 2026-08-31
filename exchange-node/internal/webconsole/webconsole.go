@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/engine"
 	"github.com/encefalopiatto/nomoreEDI/exchange-node/internal/respond"
@@ -114,8 +115,15 @@ func State(n *engine.Node) map[string]any {
 	var policy any
 	store.ReadJSON(n.Home.File("policy", "review-policy.json"), &policy)
 
+	deliveries := n.ListDeliveries()
+	if len(deliveries) > 100 {
+		deliveries = deliveries[:100]
+	}
+
 	return map[string]any{
-		"identity": n.Identity,
+		"identity":   n.Identity,
+		"deliveries": deliveries,
+		"alerts":     alerts(n),
 		"identity_details": map[string]any{
 			"key_fingerprint": sign.KeyFingerprint(n.Pub),
 			"directory":       n.Identity.Directory,
@@ -134,6 +142,61 @@ func State(n *engine.Node) map[string]any {
 		"held":              n.Home.ListDir("held"),
 		"log":               log,
 	}
+}
+
+// alerts computes what deserves attention right now, in plain sentences.
+// Severity "red" means something is wrong; "amber" means something waits.
+func alerts(n *engine.Node) []map[string]string {
+	now := n.Now().UTC()
+	var out []map[string]string
+	add := func(severity, text, tab string) {
+		out = append(out, map[string]string{"severity": severity, "text": text, "tab": tab})
+	}
+
+	if c := len(n.Desk.Queue.ListPending()); c > 0 {
+		add("amber", fmt.Sprintf("%d proposal(s) wait for your decision — nothing changes until you decide.", c), "decisions")
+	}
+	if c := len(n.Home.ListDir("held")); c > 0 {
+		add("amber", fmt.Sprintf("%d message(s) are on hold behind those decisions.", c), "decisions")
+	}
+
+	// Overdue and unanswered messages.
+	for _, name := range n.Home.ListDir("inbox") {
+		if !strings.HasSuffix(name, ".json") {
+			continue
+		}
+		var rec engine.InboxRecord
+		if store.ReadJSON(n.Home.File("inbox", name), &rec) != nil || rec.Responded {
+			continue
+		}
+		if rec.Status == "red" {
+			add("red", fmt.Sprintf("%s breaks the rules and has no answer yet — open it and send the rejection.", rec.MessageNumber), "messages")
+		}
+		if rec.ResponseDeadline != "" {
+			if due, err := time.Parse(time.RFC3339, rec.ResponseDeadline); err == nil && now.After(due) {
+				add("red", fmt.Sprintf("The response to %s is OVERDUE (%s was promised).", rec.MessageNumber, rec.DeadlineDisplay), "messages")
+			}
+		}
+	}
+
+	// Deliveries in trouble, and hand-overs nobody confirmed.
+	for _, d := range n.ListDeliveries() {
+		switch d.State {
+		case engine.DeliveryDeadLetter:
+			add("red", fmt.Sprintf("Delivery of %s to %s gave up after repeated failures — retry or investigate. Last error: %s", d.MessageNumber, d.ToName, d.LastError), "deliveries")
+		case engine.DeliveryFailed:
+			add("amber", fmt.Sprintf("Delivery of %s to %s is failing (%s) — retrying automatically.", d.MessageNumber, d.ToName, d.LastError), "deliveries")
+		case engine.DeliveryHandedOver:
+			if t, err := time.Parse(time.RFC3339, d.HandedOverAt); err == nil && now.Sub(t) > 24*time.Hour {
+				add("amber", fmt.Sprintf("%s was handed over to %s more than a day ago and no receipt came back — check with the partner.", d.MessageNumber, d.ToName), "deliveries")
+			}
+		}
+	}
+
+	if c := len(n.Home.ListDir("inbox", "quarantine")) / 2; c > 0 {
+		add("red", fmt.Sprintf("%d file(s) in quarantine failed the identity check — worth a look.", c), "tech")
+	}
+	return out
 }
 
 // archivedResponses lists the response types the original message allows.
@@ -259,6 +322,87 @@ func (s *Server) Handler() http.Handler {
 			return
 		}
 		writeJSON(w, map[string]any{"sent": msgNo})
+	})
+
+	mux.HandleFunc("POST /delivery/retry", func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			MessageNumber string `json:"message_number"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			httpError(w, err)
+			return
+		}
+		s.Mu.Lock()
+		d, err := s.Node.RetryDeliveryNow(req.MessageNumber)
+		s.Mu.Unlock()
+		if err != nil {
+			httpError(w, err)
+			return
+		}
+		writeJSON(w, map[string]any{"result": "attempted now — state: " + d.State, "delivery": d})
+	})
+
+	mux.HandleFunc("POST /delivery/resend", func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			MessageNumber string `json:"message_number"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			httpError(w, err)
+			return
+		}
+		s.Mu.Lock()
+		d, err := s.Node.ResendDelivery(req.MessageNumber, "operator")
+		s.Mu.Unlock()
+		if err != nil {
+			httpError(w, err)
+			return
+		}
+		writeJSON(w, map[string]any{"result": "resent (the partner ignores duplicates, so this is safe) — state: " + d.State})
+	})
+
+	mux.HandleFunc("POST /delivery/retry-failed", func(w http.ResponseWriter, r *http.Request) {
+		s.Mu.Lock()
+		results := s.Node.RetryAllFailed("operator")
+		s.Mu.Unlock()
+		writeJSON(w, map[string]any{"results": results, "count": len(results)})
+	})
+
+	mux.HandleFunc("POST /message/reprocess", func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			MessageNumber string `json:"message_number"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			httpError(w, err)
+			return
+		}
+		s.Mu.Lock()
+		outcome, err := s.Node.ReprocessInbound(req.MessageNumber)
+		s.Mu.Unlock()
+		if err != nil {
+			httpError(w, err)
+			return
+		}
+		writeJSON(w, map[string]any{"result": "re-checked the archived bytes: " + outcome})
+	})
+
+	mux.HandleFunc("GET /journey", func(w http.ResponseWriter, r *http.Request) {
+		number := r.URL.Query().Get("number")
+		s.Mu.Lock()
+		var events []store.LogEvent
+		for _, ev := range s.Node.Home.ReadLog() {
+			if ev.MessageNumber == number {
+				events = append(events, ev)
+			}
+		}
+		deliveries := s.Node.ListDeliveries()
+		s.Mu.Unlock()
+		var delivery any
+		for _, d := range deliveries {
+			if d.MessageNumber == number {
+				delivery = d
+			}
+		}
+		writeJSON(w, map[string]any{"message_number": number, "events": events, "delivery": delivery})
 	})
 
 	mux.HandleFunc("POST /audit/verify", func(w http.ResponseWriter, r *http.Request) {

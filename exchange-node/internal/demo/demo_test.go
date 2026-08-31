@@ -100,6 +100,24 @@ func TestDemoReplay(t *testing.T) {
 		t.Errorf("the response's echoes must verify, got %q", resp.EchoCheck)
 	}
 
+	// The delivery spine: the retailer's first order must be confirmed
+	// delivered by the supplier's signed receipt, and the supplier's order
+	// response must be confirmed by the retailer's.
+	assertDelivered := func(n *engine.Node, byNumber, byType string) {
+		for _, d := range n.ListDeliveries() {
+			if (byNumber != "" && d.MessageNumber == byNumber) || (byType != "" && d.Type == byType) {
+				if d.State != engine.DeliveryDelivered {
+					t.Errorf("%s (%s) from %s must be delivered-and-confirmed, is %s",
+						d.MessageNumber, d.Type, n.Identity.Name, d.State)
+				}
+				return
+			}
+		}
+		t.Errorf("no delivery record found on %s for %s%s", n.Identity.Name, byNumber, byType)
+	}
+	assertDelivered(retailer, "ORD-2026-88112", "")
+	assertDelivered(supplier, "", "order_response")
+
 	// Both audit chains are intact.
 	for _, n := range []*engine.Node{supplier, retailer} {
 		if err := audit.Open(n.Home.File("audit", "audit-log.jsonl")).Verify(); err != nil {

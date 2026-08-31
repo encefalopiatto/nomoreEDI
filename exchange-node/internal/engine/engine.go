@@ -34,7 +34,6 @@ type Node struct {
 	Pub      ed25519.PublicKey
 	Desk     changesdesk.Desk
 	Trust    trust.View
-	Sender   transport.Sender
 	Audit    *audit.Log
 	Now      func() time.Time
 }
@@ -52,6 +51,10 @@ type InboxRecord struct {
 	Rulebook      map[string]any      `json:"rulebook,omitempty"`
 	Content       map[string]any      `json:"content"`
 	EchoCheck     string              `json:"echo_check,omitempty"`
+
+	DeadlineDisplay  string `json:"deadline_display,omitempty"`
+	ResponseDeadline string `json:"response_deadline,omitempty"` // when the first answer is due
+	Responded        bool   `json:"responded,omitempty"`
 }
 
 // Init creates a fresh node home: keys, identity, default policy, layout,
@@ -109,11 +112,10 @@ func Open(path string) (*Node, error) {
 	tv := trust.View{Home: h}
 	n := &Node{
 		Home: h, Identity: id, Dir: dir, Priv: priv, Pub: pub,
-		Trust:  tv,
-		Desk:   changesdesk.Desk{Home: h, Trust: tv, Queue: changesdesk.Queue{Home: h}, Policy: policy, Audit: auditLog},
-		Sender: transport.Folder{},
-		Audit:  auditLog,
-		Now:    time.Now,
+		Trust: tv,
+		Desk:  changesdesk.Desk{Home: h, Trust: tv, Queue: changesdesk.Queue{Home: h}, Policy: policy, Audit: auditLog},
+		Audit: auditLog,
+		Now:   time.Now,
 	}
 	return n, nil
 }
@@ -173,6 +175,13 @@ func (n *Node) Ingest(fileName string, raw []byte) string {
 	}
 	n.Home.Log(msgNo, "signature_check", "ok", "signed by "+sign.KeyFingerprint(pub))
 
+	// The sender gets a signed receipt the moment their file verifies — the
+	// end-to-end acknowledgement "delivered" means on their side. Receipts
+	// themselves are never receipted (that would never end).
+	if msgType := supermessage.GetString(about, "message_type"); msgType != "delivery_receipt" {
+		n.sendReceipt(senderID, senderName, msgNo)
+	}
+
 	return n.continuePipeline(fileName, doc, raw)
 }
 
@@ -186,6 +195,17 @@ func (n *Node) continuePipeline(fileName string, doc *supermessage.Doc, raw []by
 	pub, _ := n.Dir.LookUp(senderID)
 
 	norm := supermessage.Normalize(doc.M).(map[string]any)
+
+	// A delivery receipt closes the loop on something we sent. It is
+	// bookkeeping, not business — it updates the delivery record and stays
+	// out of the inbox.
+	if msgType == "delivery_receipt" {
+		content, _ := norm["content"].(map[string]any)
+		if content == nil {
+			content = map[string]any{}
+		}
+		return n.handleReceipt(msgNo, content)
+	}
 
 	// Protocol-level notes (acknowledgements, rejections) carry no rulebook:
 	// verify, show, done.
@@ -309,6 +329,10 @@ func (n *Node) continuePipeline(fileName string, doc *supermessage.Doc, raw []by
 	if !result.Passed() {
 		rec.Status = "red"
 	}
+	if di := firstDeadline(norm); di != nil {
+		rec.DeadlineDisplay = di.Display
+		rec.ResponseDeadline = di.DueAt
+	}
 
 	// A response to something we sent also gets its echoes checked.
 	if ref, ok := content["order_reference"].(string); ok && msgType != "order" {
@@ -431,6 +455,9 @@ func (n *Node) Approve(proposalID, as, reason string, outOfBandConfirmed bool) (
 		n.continuePipeline("resumed-"+msgNo, doc, raw)
 		released++
 	}
+	// An approval often unblocks routes (first contact, address change):
+	// flush the queue right away so receipts and acknowledgements travel.
+	n.flushFailed()
 	return fmt.Sprintf("applied. Files written: %s. Held messages released: %d.",
 		strings.Join(res.FilesWritten, ", "), released), nil
 }
@@ -515,6 +542,7 @@ func (n *Node) FinishResponse(draftID string) (string, error) {
 		return "", err
 	}
 	os.Remove(draftPath)
+	n.markResponded(d.BasedOn)
 	n.Home.Log(msgNo, "sent", "ok", d.ResponseType+" answering "+d.BasedOn)
 	return msgNo, nil
 }
@@ -550,6 +578,7 @@ func (n *Node) SendRejection(messageNumber string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	n.markResponded(messageNumber)
 	n.Home.Log(msgNo, "sent", "ok", "rejection of "+messageNumber)
 	return msgNo, nil
 }
@@ -559,18 +588,17 @@ func (n *Node) SendFile(receiverID string, msg map[string]any) (string, error) {
 	return n.signAndSend(receiverID, msg)
 }
 
-// sendNote sends a small protocol note (acknowledgement, decline, ask).
+// sendNote sends a small protocol note (receipt, acknowledgement, decline).
+// The queue guarantees it eventually travels — a note to a partner whose
+// route isn't approved yet simply waits in the queue and goes out the moment
+// the route exists.
 func (n *Node) sendNote(receiverID, msgType string, content map[string]any) {
 	receiverName := receiverID
 	if p, ok := n.Trust.Partner(receiverID); ok {
 		receiverName = p.Name
 	}
 	msg := n.newMessage(msgType, receiverID, receiverName, content)
-	if _, err := n.signAndSend(receiverID, msg); err != nil {
-		// No route yet (e.g. declining a first contact): keep it in outbox/ready.
-		b := supermessage.MarshalPretty(msg)
-		store.AtomicWrite(n.Home.File("outbox", "ready", fmt.Sprintf("%s-%s.supermessage.json", msgType, n.Now().Format("150405"))), b)
-	}
+	n.signAndSend(receiverID, msg)
 }
 
 func (n *Node) newMessage(msgType, receiverID, receiverName string, content map[string]any) map[string]any {
@@ -599,16 +627,20 @@ func (n *Node) nextNumber(msgType string) string {
 		"despatch_advice":        "DESP",
 		"configuration_response": "CFG",
 		"rejection_notice":       "REJ",
+		"delivery_receipt":       "RCPT",
 	}[msgType]
 	if prefix == "" {
 		prefix = "MSG"
 	}
-	count := len(n.Home.ListDir("outbox", "sent")) + 1
+	count := len(n.Home.ListDir("outbox", "queue")) + 1
 	return fmt.Sprintf("%s-%s-%04d", prefix, n.Now().Format("20060102"), count)
 }
 
-// signAndSend signs a message tree and delivers it via the partner's
-// connection details ON FILE — never via anything a message claimed.
+// signAndSend signs a message tree, archives it byte-exact, files a delivery
+// record, and makes the first delivery attempt. Delivery always goes to the
+// partner's connection details ON FILE — never to anything a message claimed.
+// It never fails outright: a message without a route yet simply waits in the
+// queue, and the retry loop sends it the moment the route exists.
 func (n *Node) signAndSend(receiverID string, msg map[string]any) (string, error) {
 	signingBytes, err := supermessage.FileSigningBytes(msg)
 	if err != nil {
@@ -617,39 +649,16 @@ func (n *Node) signAndSend(receiverID string, msg map[string]any) (string, error
 	about := msg["about"].(map[string]any)
 	about["signature"].(map[string]any)["value"] = sign.Sign(n.Priv, signingBytes)
 	msgNo, _ := about["message_number"].(string)
+	msgType, _ := about["message_type"].(string)
+	receiverName := supermessage.GetString(about, "receiver", "name")
 
-	address, err := n.routeTo(receiverID)
-	if err != nil {
-		return "", err
-	}
 	b := supermessage.MarshalPretty(msg)
-	fileName := store.SafeName(msgNo) + ".supermessage.json"
-	if err := n.Sender.Send(address, fileName, b); err != nil {
+	if err := n.Home.Archive("out", msgNo, b); err != nil {
 		return "", err
 	}
-	n.Home.Archive("out", msgNo, b)
-	store.AtomicWrite(n.Home.File("outbox", "sent", fileName), b)
+	n.enqueueDelivery(msgNo, receiverID, receiverName, msgType)
+	n.TryDeliver(msgNo)
 	return msgNo, nil
-}
-
-// routeTo picks the folder-channel address from the connections on file.
-func (n *Node) routeTo(receiverID string) (string, error) {
-	channels, ok := n.Trust.Connections(receiverID)
-	if !ok {
-		return "", fmt.Errorf("no connection details on file for %s", receiverID)
-	}
-	for _, c := range channels {
-		m, ok := c.(map[string]any)
-		if !ok {
-			continue
-		}
-		if ch, _ := m["channel"].(string); ch == "local-folder" {
-			if addr, ok := m["address"].(string); ok {
-				return addr, nil
-			}
-		}
-	}
-	return "", fmt.Errorf("no usable channel on file for %s (the prototype speaks local-folder)", receiverID)
 }
 
 func (n *Node) archivedNorm(messageNumber string) (map[string]any, error) {
