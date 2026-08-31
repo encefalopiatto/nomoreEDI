@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exchange Node</title>
+<style>
+  :root{
+    --paper:#F8F9FB; --surface:#FFFFFF; --ink:#171C2B; --muted:#555D73;
+    --line:#DCE0EA; --accent:#3341B8; --accent-soft:#E9EBF9;
+    --green:#0E7A46; --green-bg:#E3F2EA; --red:#A93226; --red-bg:#F9E5E2;
+    --amber:#8A5F00; --amber-bg:#F7EED8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+  header{background:var(--surface);border-bottom:2px solid var(--ink);padding:14px 22px;
+         display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;letter-spacing:-.01em}
+  header .gln{color:var(--muted);font-size:12px}
+  header .poll{margin-left:auto;color:var(--muted);font-size:12px}
+  main{max-width:1080px;margin:0 auto;padding:18px 22px 60px;display:grid;gap:22px}
+  section h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);
+             margin:0 0 8px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:6px;
+        padding:12px 16px;margin-bottom:10px}
+  .card.green{border-left:4px solid var(--green)}
+  .card.red{border-left:4px solid var(--red)}
+  .card.amber{border-left:4px solid var(--amber)}
+  .card.review{border-left:4px solid var(--accent)}
+  .pill{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.05em;
+        padding:2px 9px;border-radius:999px;margin-right:6px;vertical-align:1px}
+  .pill.green{color:var(--green);background:var(--green-bg)}
+  .pill.red{color:var(--red);background:var(--red-bg)}
+  .pill.amber{color:var(--amber);background:var(--amber-bg)}
+  .pill.blue{color:var(--accent);background:var(--accent-soft)}
+  .title{font-weight:600}
+  .meta{color:var(--muted);font-size:12px;margin-top:2px}
+  ul.problems{margin:8px 0 4px;padding-left:20px;color:var(--red)}
+  ul.skips{margin:6px 0 2px;padding-left:20px;color:var(--muted);font-size:12px}
+  .diff{margin:8px 0;padding-left:0;list-style:none}
+  .diff li{padding:6px 10px;border-left:3px solid var(--line);margin-bottom:5px;background:var(--paper);border-radius:0 4px 4px 0}
+  .diff li.added{border-left-color:var(--green)}
+  .diff li.removed{border-left-color:var(--red)}
+  .diff li.changed{border-left-color:var(--amber)}
+  .warn{color:var(--red);font-size:12px;font-weight:600;margin-top:3px}
+  .futures{font-size:12px;color:var(--muted);margin:8px 0;border-top:1px dashed var(--line);padding-top:8px}
+  .futures b{color:var(--ink)}
+  .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type=text]{border:1px solid var(--line);border-radius:4px;padding:6px 9px;font:inherit;min-width:230px}
+  select{border:1px solid var(--line);border-radius:4px;padding:6px 9px;font:inherit;background:var(--surface)}
+  label.chk{font-size:12px;color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+  button{border:1px solid var(--line);background:var(--surface);border-radius:4px;
+         padding:6px 14px;font:inherit;font-weight:600;cursor:pointer}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.danger{color:var(--red);border-color:var(--red)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  table.kv{border-collapse:collapse;font-size:13px;margin-top:6px}
+  table.kv td{padding:3px 14px 3px 0;vertical-align:top}
+  table.kv td:first-child{color:var(--muted);white-space:nowrap}
+  .locked{background:var(--paper);color:var(--muted);border:1px solid var(--line);
+          border-radius:4px;padding:6px 9px;display:inline-block}
+  .lockednote{font-size:11px;color:var(--muted);display:block}
+  .empty{color:var(--muted);font-size:13px;font-style:italic}
+  .log{font:12px/1.7 ui-monospace,monospace;color:var(--muted);background:var(--surface);
+       border:1px solid var(--line);border-radius:6px;padding:10px 14px;max-height:220px;overflow-y:auto}
+  .toast{position:fixed;bottom:18px;right:18px;background:var(--ink);color:#fff;
+         padding:10px 16px;border-radius:6px;font-size:13px;max-width:420px;white-space:pre-wrap;display:none}
+  .content-view{font:12px/1.6 ui-monospace,monospace;background:var(--paper);border:1px solid var(--line);
+                border-radius:4px;padding:8px 12px;margin-top:8px;overflow-x:auto;display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="who">Exchange node</h1>
+  <span class="gln" id="gln"></span>
+  <span class="poll">This page refreshes itself. Review queue first — nothing in it has been applied.</span>
+</header>
+<main>
+  <section><h2>Needs your decision</h2><div id="review"></div></section>
+  <section><h2>Responses you are writing</h2><div id="drafts"></div></section>
+  <section><h2>Inbox</h2><div id="inbox"></div></section>
+  <section><h2>Quarantine — failed the signature check</h2><div id="quarantine"></div></section>
+  <section><h2>Trusted rulebooks</h2><div id="trusted"></div></section>
+  <section><h2>Activity</h2><div class="log" id="log"></div></section>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+let lastState = null;
+
+function toast(msg, ok){
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  t.style.background = ok === false ? "var(--red)" : "var(--ink)";
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.style.display = "none", 6000);
+}
+
+async function post(path, body){
+  const r = await fetch(path, {method:"POST", headers:{"Content-Type":"application/json"},
+                               body: JSON.stringify(body)});
+  const data = await r.json().catch(() => ({}));
+  if(!r.ok){ toast(data.error || "That did not work.", false); throw new Error(data.error); }
+  return data;
+}
+
+function renderReview(items){
+  if(!items || !items.length){ $("review").innerHTML = '<div class="empty">Nothing waits for you.</div>'; return; }
+  $("review").innerHTML = items.map(p => {
+    const diffs = (p.what_changes || []).map(d =>
+      `<li class="${esc(d.change)}"><b>${esc(d.change)}</b> · ${esc(d.item)} — ${esc(d.in_plain_words)}
+       ${d.warning ? `<div class="warn">⚠ ${esc(d.warning)}</div>` : ""}</li>`).join("");
+    const needsOOB = p.kind === "update_connections";
+    const akWarn = (p.answer_key_note || "").includes("FAILS");
+    return `<div class="card review">
+      <span class="pill blue">${esc(p.risk?.class || "review")}</span>
+      <span class="title">${esc(describeProposal(p))}</span>
+      <div class="meta">Proposed by <b>${esc(p.proposed_by?.name)}</b> (${esc(p.proposed_by?.company_id)}) ·
+        key ${esc(p.proposed_by?.key_fingerprint)} · ${esc(p.proposed_by?.key_continuity)} ·
+        seen ${p.times_seen}× · carried by ${esc((p.carried_by||[]).join(", "))}</div>
+      ${p.answer_key_note ? `<div class="meta" style="${akWarn ? 'color:var(--red);font-weight:600' : ''}">${esc(p.answer_key_note)}</div>` : ""}
+      <ul class="diff">${diffs}</ul>
+      <div class="futures">
+        <b>If you approve:</b> ${esc(p.if_approved)}<br>
+        <b>If you reject:</b> ${esc(p.if_rejected)}<br>
+        <b>If you do nothing:</b> ${esc(p.if_ignored)}
+      </div>
+      <div class="actions">
+        <input type="text" id="reason-${esc(p.proposal_id)}" placeholder="Your reason (required — it goes in the audit log)">
+        ${needsOOB ? `<label class="chk"><input type="checkbox" id="oob-${esc(p.proposal_id)}">
+          I confirmed this change through a different channel (phoned my contact)</label>` : ""}
+        <button class="primary" ${akWarn ? "disabled title='Fails its own answer key'" : ""}
+          data-act="decide" data-id="${esc(p.proposal_id)}" data-decision="approve" data-oob="${needsOOB ? 1 : 0}">Approve</button>
+        <button class="danger" data-act="decide" data-id="${esc(p.proposal_id)}" data-decision="reject" data-oob="0">Reject</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function describeProposal(p){
+  const s = p.subject || {};
+  if(p.kind === "trust_rulebook"){
+    if(p.first_contact) return `First contact: ${p.proposed_by?.name} asks you to trust rulebook ${s.rulebook_id} (version ${s.proposed_version}) and their connection details`;
+    return `${p.proposed_by?.name} published rulebook ${s.rulebook_id} version ${s.proposed_version} (you trust version ${s.trusted_version})`;
+  }
+  if(p.kind === "update_connections") return `${p.proposed_by?.name} wants to change connection details (${s.channel})`;
+  return p.kind;
+}
+
+async function decide(id, decision, needsOOB){
+  const reason = $("reason-" + id).value.trim();
+  if(!reason){ toast("A reason is required — it makes the audit log legible.", false); return; }
+  const body = {proposal_id:id, decision, reason, as:"operator"};
+  if(needsOOB) body.out_of_band_confirmed = $("oob-" + id).checked;
+  const res = await post("/decision", body);
+  toast(res.result || "Done.");
+  refresh();
+}
+
+function renderInbox(items, respondable){
+  if(!items || !items.length){ $("inbox").innerHTML = '<div class="empty">No messages yet.</div>'; return; }
+  items.sort((a,b) => (b.received_at||"").localeCompare(a.received_at||""));
+  $("inbox").innerHTML = items.map((m,i) => {
+    const cls = m.status === "red" ? "red" : "green";
+    const label = m.status === "red" ? "breaks the rules" : "passes all applicable rules";
+    const problems = (m.violations || []).flatMap(v => v.messages).map(t => `<li>${esc(t)}</li>`).join("");
+    const skips = (m.skipped_rules || []).map(sr =>
+      `<li>${esc(sr.rule)} applies to the ${esc(sr.applies_to)} — noted for later</li>`).join("");
+    const responses = (respondable[m.message_number] || []).map(rt =>
+      `<button data-act="respond" data-msg="${esc(m.message_number)}" data-type="${esc(rt)}">Respond: ${esc(rt.replace(/_/g," "))}</button>`).join("");
+    const rejectBtn = m.status === "red"
+      ? `<button class="danger" data-act="reject-msg" data-msg="${esc(m.message_number)}">Send rejection (with rule numbers)</button>` : "";
+    return `<div class="card ${cls}">
+      <span class="pill ${cls}">${esc(m.status)}</span>
+      <span class="title">${esc(m.message_number)}</span> · ${esc(m.message_type)} from ${esc(m.from_name)}
+      <div class="meta">${esc(m.received_at)} ${m.rulebook ? "· rulebook " + esc(m.rulebook.id) + " v" + esc(m.rulebook.version) : ""}
+        ${m.echo_check ? "· " + esc(m.echo_check) : ""} · <b>${label}</b></div>
+      ${problems ? `<ul class="problems">${problems}</ul>` : ""}
+      ${skips ? `<ul class="skips">${skips}</ul>` : ""}
+      <div class="actions">${responses} ${rejectBtn}
+        <button data-act="toggle" data-target="c${i}">Show the data</button></div>
+      <pre class="content-view" id="c${i}">${esc(JSON.stringify(m.content, null, 2))}</pre>
+    </div>`;
+  }).join("");
+}
+
+function toggleContent(id){
+  const el = $(id);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+async function startResponse(msg, type){
+  await post("/respond/start", {message_number: msg, response_type: type});
+  toast("Draft created — fill it in under “Responses you are writing”.");
+  refresh();
+}
+
+async function rejectMessage(msg){
+  const res = await post("/reject-message", {message_number: msg});
+  toast("Rejection sent: " + res.sent);
+  refresh();
+}
+
+function renderDrafts(items){
+  if(!items || !items.length){ $("drafts").innerHTML = '<div class="empty">No open drafts.</div>'; return; }
+  $("drafts").innerHTML = items.map(d => {
+    const locked = (d.locked_paths || []).map(p => {
+      const v = getPath(d.content, p);
+      return `<tr><td>${esc(p)}</td><td><span class="locked">${esc(JSON.stringify(v))}</span>
+        <span class="lockednote">copied from the order — you cannot edit this</span></td></tr>`;
+    }).join("");
+    const holes = (d.holes || []).map((h,i) => {
+      const hid = `h-${esc(d.draft_id)}-${i}`;
+      const input = h.allowed && h.allowed.length
+        ? `<select id="${hid}" data-path="${esc(h.path)}"><option value="">— choose —</option>
+            ${h.allowed.map(a => `<option>${esc(a)}</option>`).join("")}</select>`
+        : `<input type="text" id="${hid}" data-path="${esc(h.path)}" placeholder="${esc(h.note || "fill in")}">`;
+      return `<tr><td>${esc(h.path)}${h.note ? `<span class="lockednote">${esc(h.note)}</span>` : ""}</td><td>${input}</td></tr>`;
+    }).join("");
+    return `<div class="card amber">
+      <span class="pill amber">draft</span>
+      <span class="title">${esc(d.response_type.replace(/_/g," "))}</span> answering ${esc(d.based_on)} for ${esc(d.partner_name)}
+      ${d.deadline ? `<div class="meta">Deadline: ${esc(d.deadline)}</div>` : ""}
+      <table class="kv">${locked}${holes}</table>
+      <div class="actions"><button class="primary" data-act="finish" data-draft="${esc(d.draft_id)}">Check &amp; send</button></div>
+    </div>`;
+  }).join("");
+}
+
+function getPath(tree, path){
+  let cur = tree;
+  for(const seg of path.split(".")){
+    const m = seg.match(/^(\w+)\[(\d+)\]$/);
+    if(m){ cur = cur?.[m[1]]?.[Number(m[2])]; } else { cur = cur?.[seg]; }
+    if(cur === undefined) return undefined;
+  }
+  return cur;
+}
+
+async function finishDraft(draftID){
+  const fills = {};
+  document.querySelectorAll(`[id^="h-${draftID}-"]`).forEach(el => {
+    const v = el.value.trim();
+    if(v !== "") fills[el.dataset.path] = /^\d+$/.test(v) ? Number(v) : v;
+    else fills[el.dataset.path] = "";
+  });
+  const res = await post("/respond/finish", {draft_id: draftID, fills});
+  toast("Checked against the choreography, signed, and sent: " + res.sent);
+  refresh();
+}
+
+function renderQuarantine(items){
+  if(!items || !items.length){ $("quarantine").innerHTML = '<div class="empty">Nothing quarantined.</div>'; return; }
+  $("quarantine").innerHTML = items.map(q => `<div class="card red">
+    <span class="pill red">quarantined</span> <span class="title">${esc(q.file)}</span>
+    <div class="meta">${esc(q.reason)}</div></div>`).join("");
+}
+
+function renderTrusted(items){
+  if(!items || !items.length){ $("trusted").innerHTML = '<div class="empty">No rulebooks trusted yet — first contact will bring one.</div>'; return; }
+  $("trusted").innerHTML = items.map(rb => {
+    const versions = (rb.accepting || []).map(v =>
+      `version ${v.version} (${esc(v.fingerprint).slice(0,16)}…) trusted from ${esc(v.trusted_from)}` +
+      (v.also_accepted_until ? ` — still accepted until ${esc(v.also_accepted_until)}` : "")).join("<br>");
+    return `<div class="card"><span class="title">${esc(rb.rulebook_id)}</span>
+      <div class="meta">${versions}</div></div>`;
+  }).join("");
+}
+
+function renderLog(items){
+  $("log").innerHTML = (items || []).slice().reverse().map(e =>
+    `${esc(e.at)}  ${esc(e.message_number || "")}  ${esc(e.stage)} → ${esc(e.outcome)}  ${esc(e.detail || "")}`
+  ).join("<br>");
+}
+
+function focusSafe(){
+  const a = document.activeElement;
+  return a && (a.tagName === "INPUT" || a.tagName === "SELECT");
+}
+
+async function refresh(){
+  try{
+    const r = await fetch("/state");
+    const s = await r.json();
+    lastState = s;
+    $("who").textContent = s.identity?.name || "Exchange node";
+    $("gln").textContent = s.identity?.company_id || "";
+    if(focusSafe()) return; // don't yank the form out from under a typing human
+    renderReview(s.review);
+    renderDrafts(s.drafts);
+    renderInbox(s.inbox || [], s.respondable || {});
+    renderQuarantine(s.quarantine);
+    renderTrusted(s.trusted_rulebooks);
+    renderLog(s.log);
+  }catch(e){ /* node restarting; try again on the next tick */ }
+}
+
+// One delegated click handler; no inline handlers, so dynamic values never
+// reach a JavaScript context — they live in data attributes only.
+document.addEventListener("click", e => {
+  const btn = e.target.closest("button[data-act]");
+  if(!btn) return;
+  const ds = btn.dataset;
+  switch(ds.act){
+    case "decide":      decide(ds.id, ds.decision, ds.oob === "1"); break;
+    case "respond":     startResponse(ds.msg, ds.type); break;
+    case "reject-msg":  rejectMessage(ds.msg); break;
+    case "finish":      finishDraft(ds.draft); break;
+    case "toggle":      toggleContent(ds.target); break;
+  }
+});
+
+refresh();
+setInterval(refresh, 1500);
+setInterval(() => fetch("/receive", {method:"POST"}).catch(()=>{}), 2000);
+</script>
+</body>
+</html>

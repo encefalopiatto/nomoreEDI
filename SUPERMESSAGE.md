@@ -70,6 +70,8 @@ The companion to the format: one small program (the "reader") that can, given an
 
 The reader is deliberately minimal. All the intelligence lives in the file; the reader just obeys it. That is what makes adoption cheap: implementing the reader (or embedding it in an ERP plugin) is a small, well-defined job, and it never changes when rulebooks change.
 
+A working prototype of the reader — grown into a full exchange node with routing, a human review queue for every proposed change, and a guided two-company demo — exists: see [NODE.md](NODE.md).
+
 ## How this fits the build plan
 
 This specification does not replace the order of work in [DECISION.md](DECISION.md) — it completes it. The rulebook library, the checker, the workbench, the test portal, and the change board are how rulebooks get created, proven, and governed. The supermessage is the **traveling form** of the same rulebook: the packaging that lets it leave our walls as a portable, signed thing that anyone's software can open. Concretely: section 3 of a supermessage *is* a rulebook from the library; the checker and the reader validate with the *same* rules; the answer key in section 6 is the same one the test portal uses. One artifact, two homes — the library at rest, the supermessage in motion.
